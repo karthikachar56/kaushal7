@@ -1184,6 +1184,10 @@ textarea.form-control {
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 16px;
+    }
+    
     .section {
         padding: 60px 0;
     }
@@ -1196,14 +1200,21 @@ textarea.form-control {
         height: calc(100vh - 70px);
         background: var(--bg-main);
         flex-direction: column;
-        justify-content: center;
-        gap: 40px;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 28px;
+        padding-top: 48px;
         transition: var(--transition);
         border-top: 1px solid var(--border-color);
+        overflow-y: auto;
     }
     
     .nav-menu.active {
         left: 0;
+    }
+    
+    .nav-link {
+        font-size: 1.1rem;
     }
     
     .menu-toggle {
@@ -1225,39 +1236,114 @@ textarea.form-control {
     }
     
     .hero-title {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.25rem;
+    }
+    
+    .hero-desc {
+        font-size: 0.95rem;
+        margin-bottom: 24px;
     }
     
     .hero-buttons {
         width: 100%;
         flex-direction: column;
+        gap: 12px;
+    }
+    
+    .hero-buttons .btn {
+        width: 100%;
     }
     
     .hero-image-frame {
-        width: 260px;
-        height: 325px;
+        width: 250px;
+        height: 312px;
     }
     
     .about-bento-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
     
     .bento-bio, .bento-education, .bento-contact-info, .bento-tools {
         grid-column: span 1;
     }
     
+    .bento-card, .journey-card, .project-card, .timeline-content, .contact-form-wrapper, .modal-body {
+        padding: 20px;
+    }
+    
+    .journey-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .eetirp-banner {
+        padding: 24px;
+        gap: 24px;
+    }
+    
+    .eetirp-banner-content h3 {
+        font-size: 1.6rem;
+    }
+    
+    .eetirp-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .eetirp-stat-box {
+        padding: 16px 12px;
+    }
+    
+    .eetirp-stat-number {
+        font-size: 1.8rem;
+    }
+    
     .skills-grid, .projects-grid, .contact-layout {
         grid-template-columns: 1fr;
-        gap: 24px;
+        gap: 20px;
     }
     
     .timeline-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 4px;
     }
+    
     .certifications-grid {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 16px;
+    }
+    
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .gallery-item {
+        height: 150px;
+    }
+    
+    .gallery-item-overlay {
+        padding: 12px;
+    }
+    
+    .gallery-item-title {
+        font-size: 0.85rem;
+    }
+    
+    .modal-content {
+        max-height: 95vh;
+    }
+    
+    .modal-info-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 12px;
     }
 }
 
