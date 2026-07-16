@@ -1222,7 +1222,17 @@ textarea.form-control {
     }
     
     .hero {
-        padding-top: 60px;
+        padding-top: 100px;
+    }
+    
+    .hero-greeting {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        font-size: 1rem;
+        text-align: center;
+        width: 100%;
+        margin-bottom: 12px;
     }
     
     .hero-grid {
