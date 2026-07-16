@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const crypto = require('crypto');
 
 // Load environment variables if .env file exists
 require('dotenv').config();
@@ -15,74 +16,103 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Ensure uploads folder exists (safely caught for read-only serverless filesystems)
-// Uploads are placed in ../uploads relative to the api/ directory
-const uploadsDir = path.join(__dirname, '../uploads');
-try {
-    if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir);
-    }
-} catch (e) {
-    console.warn('Warning: Could not create uploads directory (read-only filesystem):', e.message);
-}
+// Serve static files from root directory (essential for local run)
+app.use(express.static(path.join(__dirname, '..')));
 
-// Admin Credentials
+// Admin credentials
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'kaushal_admin';
+const JWT_SECRET = process.env.JWT_SECRET || 'kaushal_secret_key_987654321_portfolio';
 
-// Simple in-memory session token store to validate auth
-let activeSessions = new Set();
-
-// -------------------------------------------------------------
-// DATABASE SETUP (MongoDB with fallback to local JSON file)
-// -------------------------------------------------------------
-let isMongoConnected = false;
-let BlogModel;
-
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
-
-if (MONGODB_URI) {
-    console.log('Attempting to connect to MongoDB Atlas...');
-    mongoose.connect(MONGODB_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    })
-    .then(() => {
-        console.log('Successfully connected to MongoDB Atlas.');
-        isMongoConnected = true;
-        
-        // Define Blog Mongoose Schema with imageUrl
-        const blogSchema = new mongoose.Schema({
-            title: { type: String, required: true },
-            category: { type: String, required: true },
-            date: { type: String, required: true },
-            excerpt: { type: String, required: true },
-            content: { type: String, required: true },
-            imageUrl: { type: String, default: '' }
-        }, { timestamps: true });
-        
-        // Convert virtual id
-        blogSchema.virtual('id').get(function() {
-            return this._id.toHexString();
-        });
-        blogSchema.set('toJSON', { virtuals: true });
-        
-        BlogModel = mongoose.model('Blog', blogSchema);
-        
-        // Seed default blogs to MongoDB if it is empty
-        seedMongoDB();
-    })
-    .catch(err => {
-        console.error('MongoDB connection error. Falling back to local file storage.', err);
-        isMongoConnected = false;
-    });
-} else {
-    console.log('No MONGODB_URI found. Initializing with local JSON file storage (blogs.json).');
+// Stateless JWT Helper Functions (Node.js crypto implementation)
+function generateToken(payload) {
+    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+    const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const signature = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+    return `${header}.${body}.${signature}`;
 }
 
-// Seed local file data to MongoDB
+function verifyToken(token) {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        const [header, body, signature] = parts;
+        const expectedSignature = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+        if (signature !== expectedSignature) return null;
+        
+        const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+        if (payload.exp && Date.now() > payload.exp) {
+            return null; // Token expired
+        }
+        return payload;
+    } catch (e) {
+        return null;
+    }
+}
+
+// -------------------------------------------------------------
+// DATABASE SETUP & CACHING FOR VERCEL SERVERLESS FUNCTIONS
+// -------------------------------------------------------------
+let cachedDb = null;
+let isSeeded = false;
+
+// Dynamic model retrieval to prevent OverwriteModelError in serverless hot reloads
+const getBlogModel = () => {
+    const blogSchema = new mongoose.Schema({
+        title: { type: String, required: true },
+        category: { type: String, required: true },
+        date: { type: String, required: true },
+        excerpt: { type: String, required: true },
+        content: { type: String, required: true },
+        imageUrl: { type: String, default: '' }
+    }, { timestamps: true });
+
+    blogSchema.virtual('id').get(function() {
+        return this._id.toHexString();
+    });
+    blogSchema.set('toJSON', { virtuals: true });
+
+    return mongoose.models.Blog || mongoose.model('Blog', blogSchema);
+};
+
+const getImageModel = () => {
+    const imageSchema = new mongoose.Schema({
+        filename: { type: String, required: true, unique: true },
+        contentType: { type: String, required: true },
+        data: { type: Buffer, required: true }
+    }, { timestamps: true });
+
+    return mongoose.models.Image || mongoose.model('Image', imageSchema);
+};
+
+// Cached connection function
+async function connectToDatabase() {
+    if (cachedDb) {
+        return cachedDb;
+    }
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+        throw new Error('MONGODB_URI environment variable is not defined.');
+    }
+    const db = await mongoose.connect(uri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    });
+    cachedDb = db;
+    
+    // Seed database if it's empty
+    if (!isSeeded) {
+        isSeeded = true;
+        await seedMongoDB();
+    }
+    
+    return db;
+}
+
+// Seed local blogs.json to MongoDB
 async function seedMongoDB() {
     try {
+        const BlogModel = getBlogModel();
         const count = await BlogModel.countDocuments();
         if (count === 0) {
             console.log('MongoDB collection is empty. Seeding initial data from blogs.json...');
@@ -106,53 +136,28 @@ async function seedMongoDB() {
     }
 }
 
-// Local File Helper Functions (relative path is up one level)
-const LOCAL_JSON_FILE = path.join(__dirname, '../blogs.json');
-
-function readLocalBlogs() {
+// Database connection middleware for every incoming request
+app.use(async (req, res, next) => {
     try {
-        if (!fs.existsSync(LOCAL_JSON_FILE)) {
-            return [];
-        }
-        const raw = fs.readFileSync(LOCAL_JSON_FILE, 'utf8');
-        return JSON.parse(raw);
+        await connectToDatabase();
+        next();
     } catch (err) {
-        console.error('Error reading blogs.json:', err);
-        return [];
-    }
-}
-
-function writeLocalBlogs(blogs) {
-    try {
-        fs.writeFileSync(LOCAL_JSON_FILE, JSON.stringify(blogs, null, 2));
-        return true;
-    } catch (err) {
-        console.error('Error writing to blogs.json:', err);
-        return false;
-    }
-}
-
-// -------------------------------------------------------------
-// FILE UPLOAD CONFIGURATION (Multer)
-// -------------------------------------------------------------
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+        console.error('Database connection failed:', err);
+        res.status(500).json({ success: false, error: 'Internal server error: Database offline.' });
     }
 });
 
+// -------------------------------------------------------------
+// FILE UPLOAD CONFIGURATION (Memory Storage for Vercel stability)
+// -------------------------------------------------------------
+const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // Limit 5MB
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: (req, file, cb) => {
         const filetypes = /jpeg|jpg|png|gif|webp/;
         const mimetype = filetypes.test(file.mimetype);
         const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-        
         if (mimetype && extname) {
             return cb(null, true);
         }
@@ -167,11 +172,13 @@ function authenticateAdmin(req, res, next) {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
-        if (activeSessions.has(token)) {
+        const decoded = verifyToken(token);
+        if (decoded && decoded.role === 'admin') {
+            req.adminUser = decoded;
             return next();
         }
     }
-    return res.status(401).json({ success: false, error: 'Unauthorized administrative token' });
+    return res.status(401).json({ success: false, error: 'Unauthorized administrative access.' });
 }
 
 // -------------------------------------------------------------
@@ -182,20 +189,15 @@ function authenticateAdmin(req, res, next) {
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        const token = 'session_' + Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
-        activeSessions.add(token);
+        const payload = { username, role: 'admin', exp: Date.now() + 24 * 60 * 60 * 1000 }; // 24 hours
+        const token = generateToken(payload);
         return res.json({ success: true, token });
     }
     return res.status(401).json({ success: false, error: 'Invalid admin credentials' });
 });
 
-// Admin Logout
+// Admin Logout (Stateless success response)
 app.post('/api/logout', (req, res) => {
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.split(' ')[1];
-        activeSessions.delete(token);
-    }
     res.json({ success: true });
 });
 
@@ -204,7 +206,8 @@ app.get('/api/validate-token', (req, res) => {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
-        if (activeSessions.has(token)) {
+        const decoded = verifyToken(token);
+        if (decoded && decoded.role === 'admin') {
             return res.json({ valid: true });
         }
     }
@@ -214,20 +217,22 @@ app.get('/api/validate-token', (req, res) => {
 // Get all blogs
 app.get('/api/blogs', async (req, res) => {
     try {
-        if (isMongoConnected) {
-            const dbBlogs = await BlogModel.find().sort({ createdAt: -1 });
-            return res.json(dbBlogs);
-        } else {
-            const localBlogs = readLocalBlogs();
-            return res.json([...localBlogs].reverse());
-        }
+        const BlogModel = getBlogModel();
+        const dbBlogs = await BlogModel.find().sort({ createdAt: -1 });
+        // Map elements to virtual structure
+        const formatted = dbBlogs.map(blog => {
+            const obj = blog.toObject({ virtuals: true });
+            obj.id = obj._id.toString();
+            return obj;
+        });
+        return res.json(formatted);
     } catch (err) {
         console.error('Error fetching blogs:', err);
         res.status(500).json({ success: false, error: 'Failed to retrieve blog posts' });
     }
 });
 
-// Add a new blog with optional imageUrl
+// Add new blog
 app.post('/api/blogs', authenticateAdmin, async (req, res) => {
     try {
         const { title, category, excerpt, content, imageUrl } = req.body;
@@ -238,82 +243,110 @@ app.post('/api/blogs', authenticateAdmin, async (req, res) => {
         const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
         const currentDate = new Date().toLocaleDateString('en-US', dateOptions);
 
-        if (isMongoConnected) {
-            const newBlog = new BlogModel({
-                title,
-                category,
-                date: currentDate,
-                excerpt,
-                content,
-                imageUrl: imageUrl || ''
-            });
-            await newBlog.save();
-            return res.status(201).json({ success: true, blog: newBlog });
-        } else {
-            const blogs = readLocalBlogs();
-            const newId = String(Date.now());
-            const newBlog = {
-                id: newId,
-                title,
-                category,
-                date: currentDate,
-                excerpt,
-                content,
-                imageUrl: imageUrl || ''
-            };
-            blogs.push(newBlog);
-            writeLocalBlogs(blogs);
-            return res.status(201).json({ success: true, blog: newBlog });
-        }
+        const BlogModel = getBlogModel();
+        const newBlog = new BlogModel({
+            title,
+            category,
+            date: currentDate,
+            excerpt,
+            content,
+            imageUrl: imageUrl || ''
+        });
+        await newBlog.save();
+        
+        const obj = newBlog.toObject({ virtuals: true });
+        obj.id = obj._id.toString();
+        return res.status(201).json({ success: true, blog: obj });
     } catch (err) {
         console.error('Error creating blog:', err);
         res.status(500).json({ success: false, error: 'Failed to create blog post' });
     }
 });
 
-// Image Upload Endpoint (secured)
+// Image Upload Endpoint (Uses MemoryStorage and saves to MongoDB)
 app.post('/api/upload', authenticateAdmin, (req, res) => {
-    upload.single('image')(req, res, (err) => {
+    upload.single('image')(req, res, async (err) => {
         if (err) {
             return res.status(400).json({ success: false, error: err.message });
         }
         if (!req.file) {
             return res.status(400).json({ success: false, error: 'No file selected' });
         }
-        const fileUrl = `/uploads/${req.file.filename}`;
-        return res.json({ success: true, url: fileUrl });
+        
+        try {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            const filename = uniqueSuffix + path.extname(req.file.originalname);
+            
+            const ImageModel = getImageModel();
+            const newImage = new ImageModel({
+                filename: filename,
+                contentType: req.file.mimetype,
+                data: req.file.buffer
+            });
+            await newImage.save();
+            
+            // Return URL mapped to our rewrite routes
+            const fileUrl = `/uploads/${filename}`;
+            return res.json({ success: true, url: fileUrl });
+        } catch (dbErr) {
+            console.error('Database image upload error:', dbErr);
+            return res.status(500).json({ success: false, error: 'Failed to save image to database.' });
+        }
     });
 });
 
-// Delete a blog
+// Serve images dynamically from MongoDB (with disk fallback for pre-existing assets)
+app.get('/uploads/:filename', async (req, res) => {
+    try {
+        const ImageModel = getImageModel();
+        const file = await ImageModel.findOne({ filename: req.params.filename });
+        
+        if (file) {
+            res.setHeader('Content-Type', file.contentType);
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // Cache for 1 year
+            return res.send(file.data);
+        }
+        
+        // Fallback to local filesystem
+        const localPath = path.join(__dirname, '../uploads', req.params.filename);
+        if (fs.existsSync(localPath)) {
+            const ext = path.extname(req.params.filename).toLowerCase();
+            let contentType = 'image/jpeg';
+            if (ext === '.png') contentType = 'image/png';
+            else if (ext === '.gif') contentType = 'image/gif';
+            else if (ext === '.webp') contentType = 'image/webp';
+            
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+            return res.sendFile(localPath);
+        }
+        
+        return res.status(404).send('Not Found');
+    } catch (err) {
+        console.error('Error loading image:', err);
+        return res.status(500).send('Error loading image.');
+    }
+});
+
+// Delete blog post
 app.delete('/api/blogs/:id', authenticateAdmin, async (req, res) => {
     try {
-        const id = req.params.id;
-        if (isMongoConnected) {
-            const deleted = await BlogModel.findByIdAndDelete(id);
-            if (!deleted) {
-                return res.status(404).json({ success: false, error: 'Blog post not found in MongoDB database' });
-            }
-            return res.json({ success: true, message: 'Blog post successfully deleted from MongoDB.' });
-        } else {
-            const blogs = readLocalBlogs();
-            const filtered = blogs.filter(blog => blog.id !== id);
-            if (blogs.length === filtered.length) {
-                return res.status(404).json({ success: false, error: 'Blog post not found in local file storage' });
-            }
-            writeLocalBlogs(filtered);
-            return res.json({ success: true, message: 'Blog post successfully deleted from local files.' });
+        const BlogModel = getBlogModel();
+        const deleted = await BlogModel.findByIdAndDelete(req.params.id);
+        if (!deleted) {
+            return res.status(404).json({ success: false, error: 'Blog post not found.' });
         }
+        return res.json({ success: true, message: 'Blog post successfully deleted.' });
     } catch (err) {
         console.error('Error deleting blog:', err);
         res.status(500).json({ success: false, error: 'Failed to delete blog post' });
     }
 });
 
-// Export Express app for Vercel Serverless Functions
+// Export the Express app for Vercel Serverless Functions
 module.exports = app;
 
-// Start Server locally (skip listen on Vercel platform)
+// Start local server if not running inside the Vercel platform environment
 if (!process.env.VERCEL) {
     app.listen(PORT, () => {
         console.log(`=================================================`);
