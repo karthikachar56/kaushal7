@@ -21,10 +21,14 @@ app.use(express.static(__dirname));
 // Serve uploads statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Ensure uploads folder exists on startup
+// Ensure uploads folder exists on startup (safely caught for read-only serverless filesystems)
 const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir);
+try {
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir);
+    }
+} catch (e) {
+    console.warn('Warning: Could not create uploads directory (read-only filesystem):', e.message);
 }
 
 // Admin Credentials
