@@ -15,14 +15,9 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static assets from root
-app.use(express.static(__dirname));
-
-// Serve uploads statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Ensure uploads folder exists on startup (safely caught for read-only serverless filesystems)
-const uploadsDir = path.join(__dirname, 'uploads');
+// Ensure uploads folder exists (safely caught for read-only serverless filesystems)
+// Uploads are placed in ../uploads relative to the api/ directory
+const uploadsDir = path.join(__dirname, '../uploads');
 try {
     if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir);
@@ -91,7 +86,7 @@ async function seedMongoDB() {
         const count = await BlogModel.countDocuments();
         if (count === 0) {
             console.log('MongoDB collection is empty. Seeding initial data from blogs.json...');
-            const localFile = path.join(__dirname, 'blogs.json');
+            const localFile = path.join(__dirname, '../blogs.json');
             if (fs.existsSync(localFile)) {
                 const data = JSON.parse(fs.readFileSync(localFile, 'utf8'));
                 const formatted = data.map(item => ({
@@ -111,13 +106,12 @@ async function seedMongoDB() {
     }
 }
 
-// Local File Helper Functions
-const LOCAL_JSON_FILE = path.join(__dirname, 'blogs.json');
+// Local File Helper Functions (relative path is up one level)
+const LOCAL_JSON_FILE = path.join(__dirname, '../blogs.json');
 
 function readLocalBlogs() {
     try {
         if (!fs.existsSync(LOCAL_JSON_FILE)) {
-            fs.writeFileSync(LOCAL_JSON_FILE, JSON.stringify([], null, 2));
             return [];
         }
         const raw = fs.readFileSync(LOCAL_JSON_FILE, 'utf8');
@@ -314,11 +308,6 @@ app.delete('/api/blogs/:id', authenticateAdmin, async (req, res) => {
         console.error('Error deleting blog:', err);
         res.status(500).json({ success: false, error: 'Failed to delete blog post' });
     }
-});
-
-// Primary route to serve portfolio
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Export Express app for Vercel Serverless Functions
