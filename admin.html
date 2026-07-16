@@ -309,7 +309,12 @@
             
             <div class="form-group">
                 <label for="password">Security Password</label>
-                <input type="password" id="password" class="form-control" placeholder="Enter password" required autocomplete="current-password">
+                <div style="position: relative;">
+                    <input type="password" id="password" class="form-control" placeholder="Enter password" required autocomplete="current-password" style="padding-right: 40px;">
+                    <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                        <i class="far fa-eye" id="toggle-password-icon"></i>
+                    </button>
+                </div>
             </div>
             
             <button type="submit" class="btn btn-primary">Authorize Connection <i class="fas fa-sign-in-alt"></i></button>
@@ -652,6 +657,19 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        // Toggle password visibility
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const icon = document.getElementById('toggle-password-icon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.className = 'far fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                icon.className = 'far fa-eye';
+            }
         }
     </script>
 </body>
