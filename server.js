@@ -317,11 +317,16 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Start Server
-app.listen(PORT, () => {
-    console.log(`=================================================`);
-    console.log(` PORTFOLIO APP SERVER LAUNCHED SUCCESSFULLY`);
-    console.log(` Running locally at: http://localhost:${PORT}`);
-    console.log(` Admin Dashboard:    http://localhost:${PORT}/admin.html`);
-    console.log(`=================================================`);
-});
+// Export Express app for Vercel Serverless Functions
+module.exports = app;
+
+// Start Server locally (skip listen on Vercel platform)
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`=================================================`);
+        console.log(` PORTFOLIO APP SERVER LAUNCHED SUCCESSFULLY`);
+        console.log(` Running locally at: http://localhost:${PORT}`);
+        console.log(` Admin Dashboard:    http://localhost:${PORT}/admin.html`);
+        console.log(`=================================================`);
+    });
+}
