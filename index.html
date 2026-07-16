@@ -420,60 +420,8 @@
                 <p>Consistently sharing startup chronicles, technology guidelines, and career tracks</p>
             </div>
             
-            <div class="blog-grid">
-                <!-- Blog 1 -->
-                <article class="blog-card reveal-scale">
-                    <div class="blog-card-image">
-                        <i class="fas fa-chalkboard-user"></i>
-                    </div>
-                    <div class="blog-card-content">
-                        <div class="blog-meta">
-                            <span class="blog-category">Education</span>
-                            <span class="blog-date">July 15, 2026</span>
-                        </div>
-                        <h3 class="blog-title">Placement Bootcamps: Scaling Technical Training</h3>
-                        <p class="blog-excerpt">
-                            Behind the scenes of our recent EETIRP placement bootcamp. Key strategies on teaching data modeling, microservice routers, and system designs.
-                        </p>
-                        <span class="blog-readmore" onclick="showBlogAlert('Placement Bootcamps', 'Today we conducted a placement bootcamp covering fullstack routes, Express middlewares, and mock interview preparations. Over 50 students successfully connected their local repositories to our assessment databases!')">Read Article <i class="fas fa-chevron-right"></i></span>
-                    </div>
-                </article>
-                
-                <!-- Blog 2 -->
-                <article class="blog-card reveal-scale delay-100">
-                    <div class="blog-card-image">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <div class="blog-card-content">
-                        <div class="blog-meta">
-                            <span class="blog-category">AI &amp; Coding</span>
-                            <span class="blog-date">July 08, 2026</span>
-                        </div>
-                        <h3 class="blog-title">Butterfly AI: Deploying Adaptive Mock Simulators</h3>
-                        <p class="blog-excerpt">
-                            How we developed an adaptive mock interview model. Technical challenges in handling prompt tokens, real-time logging, and score dashboards.
-                        </p>
-                        <span class="blog-readmore" onclick="showBlogAlert('Butterfly AI Development', 'We have successfully deployed a beta test of Butterfly AI, suggeting lessons based on student test scores. The API routes maintain secure JWT verification and achieve less than 80ms latency.')">Read Article <i class="fas fa-chevron-right"></i></span>
-                    </div>
-                </article>
-                
-                <!-- Blog 3 -->
-                <article class="blog-card reveal-scale delay-200">
-                    <div class="blog-card-image">
-                        <i class="fab fa-java"></i>
-                    </div>
-                    <div class="blog-card-content">
-                        <div class="blog-meta">
-                            <span class="blog-category">Career Advice</span>
-                            <span class="blog-date">June 28, 2026</span>
-                        </div>
-                        <h3 class="blog-title">Java Foundations: Cracking Object-Oriented Loops</h3>
-                        <p class="blog-excerpt">
-                            Common Java interview patterns that trip up graduates. A review of garbage collection logic, threading, interfaces, and memory models.
-                        </p>
-                        <span class="blog-readmore" onclick="showBlogAlert('Java Interview Mastery', 'A complete roadmap detailing the primary Java OOP patterns, memory profiles, and multithreading schemas frequently checked during technical evaluations at leading firms.')">Read Article <i class="fas fa-chevron-right"></i></span>
-                    </div>
-                </article>
+            <div class="blog-grid" id="blog-grid">
+                <!-- Dynamically loaded from backend API -->
             </div>
         </div>
     </section>
@@ -988,6 +936,77 @@
         document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => {
             revealObserver.observe(el);
         });
+
+        // Initialize blog list fetching
+        loadDynamicBlogs();
+
+        async function loadDynamicBlogs() {
+            const blogGrid = document.getElementById('blog-grid');
+            if (!blogGrid) return;
+            
+            try {
+                const res = await fetch('/api/blogs');
+                const blogs = await res.json();
+                
+                if (blogs.length === 0) {
+                    blogGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-secondary); font-weight: 500; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-card);">No active blog posts found. Check back soon!</div>';
+                    return;
+                }
+                
+                blogGrid.innerHTML = blogs.map((blog, idx) => {
+                    let iconClass = 'fas fa-file-alt';
+                    if (blog.category.includes('AI') || blog.category.includes('Coding')) {
+                        iconClass = 'fas fa-brain';
+                    } else if (blog.category.includes('Education')) {
+                        iconClass = 'fas fa-chalkboard-user';
+                    } else if (blog.category.includes('Startup') || blog.category.includes('Journey')) {
+                        iconClass = 'fas fa-rocket';
+                    } else if (blog.category.includes('Career') || blog.category.includes('Advice')) {
+                        iconClass = 'fas fa-briefcase';
+                    }
+                    
+                    const delayClass = idx % 3 === 1 ? 'delay-100' : (idx % 3 === 2 ? 'delay-200' : '');
+                    
+                    const escapedTitle = blog.title.replace(/'/g, "\\'");
+                    const escapedContent = blog.content.replace(/'/g, "\\'").replace(/\n/g, "\\n");
+                    
+                    return `
+                        <article class="blog-card reveal-scale ${delayClass}">
+                            <div class="blog-card-image">
+                                <i class="${iconClass}"></i>
+                            </div>
+                            <div class="blog-card-content">
+                                <div class="blog-meta">
+                                    <span class="blog-category">${escapeHTML(blog.category)}</span>
+                                    <span class="blog-date">${escapeHTML(blog.date)}</span>
+                                </div>
+                                <h3 class="blog-title">${escapeHTML(blog.title)}</h3>
+                                <p class="blog-excerpt">${escapeHTML(blog.excerpt)}</p>
+                                <span class="blog-readmore" onclick="showBlogAlert('${escapedTitle}', '${escapedContent}')">Read Article <i class="fas fa-chevron-right"></i></span>
+                            </div>
+                        </article>
+                    `;
+                }).join('');
+                
+                // Observe dynamic elements
+                document.querySelectorAll('#blog-grid .reveal-scale').forEach(el => {
+                    revealObserver.observe(el);
+                });
+                
+            } catch (err) {
+                console.error('Error loading blogs:', err);
+                blogGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ef4444; font-weight: 600; border: 1px dashed #fca5a5; border-radius: var(--radius-md); background: #fef2f2;">Failed to load dynamic blog posts.</div>';
+            }
+        }
+
+        function escapeHTML(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
     </script>
 </body>
 </html>

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "title": "Placement Bootcamps: Scaling Technical Training",
+    "category": "Education",
+    "date": "July 15, 2026",
+    "excerpt": "Behind the scenes of our recent EETIRP placement bootcamp. Key strategies on teaching data modeling, microservice routers, and system designs.",
+    "content": "Today we conducted a placement bootcamp covering fullstack routes, Express middlewares, and mock interview preparations. Over 50 students successfully connected their local repositories to our assessment databases!"
+  },
+  {
+    "id": "2",
+    "title": "Butterfly AI: Deploying Adaptive Mock Simulators",
+    "category": "AI & Coding",
+    "date": "July 08, 2026",
+    "excerpt": "How we developed an adaptive mock interview model. Technical challenges in handling prompt tokens, real-time logging, and score dashboards.",
+    "content": "We have successfully deployed a beta test of Butterfly AI, suggesting lessons based on student test scores. The API routes maintain secure JWT verification and achieve less than 80ms latency."
+  },
+  {
+    "id": "3",
+    "title": "Java Foundations: Cracking Object-Oriented Loops",
+    "category": "Career Advice",
+    "date": "June 28, 2026",
+    "excerpt": "Common Java interview patterns that trip up graduates. A review of garbage collection logic, threading, interfaces, and memory models.",
+    "content": "A complete roadmap detailing the primary Java OOP patterns, memory profiles, and multithreading schemas frequently checked during technical evaluations at leading firms."
+  }
+]

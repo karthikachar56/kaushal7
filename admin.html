@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaushal Kumar Baitha | Admin Dashboard</title>
+    
+    <!-- FontAwesome & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --border-color: #cbd5e1;
+            --border-hover: #94a3b8;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            --shadow-md: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Container Layouts */
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 40px 32px;
+            box-shadow: var(--shadow-md);
+            display: block;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 1100px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            display: none;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        /* Headings & Typography */
+        h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+        }
+
+        .header-logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logo-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary);
+            border-radius: 50%;
+        }
+
+        /* Form elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            background: var(--bg-main);
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--bg-card);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: #ffffff;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Dashboard Internal Header */
+        .dashboard-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+
+        .logout-link {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #ef4444;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Main Workspace Grid */
+        .dashboard-body {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            min-height: 500px;
+        }
+
+        .composer-panel {
+            padding: 32px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .catalog-panel {
+            padding: 32px;
+            background: #fafafc;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Active Catalog Items */
+        .catalog-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .catalog-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .catalog-item:hover {
+            border-color: var(--border-hover);
+        }
+
+        .catalog-meta {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .catalog-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .catalog-date {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Alert notifications */
+        .status-alert {
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: none;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #b91c1c;
+        }
+
+        .alert-success {
+            background: #ecfdf5;
+            border: 1px solid #6ee7b7;
+            color: #047857;
+        }
+
+        /* Responsive Layout overrides */
+        @media (max-width: 900px) {
+            body {
+                align-items: flex-start;
+            }
+            .dashboard-body {
+                grid-template-columns: 1fr;
+            }
+            .composer-panel {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN INTERFACE -->
+    <div class="login-container" id="login-panel">
+        <div class="header-logo">
+            KAUSHAL ADMIN <span class="logo-dot"></span>
+        </div>
+        
+        <div class="status-alert alert-error" id="login-error"></div>
+        
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="username">Access Username</label>
+                <input type="text" id="username" class="form-control" placeholder="Enter username" required autocomplete="username">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Security Password</label>
+                <input type="password" id="password" class="form-control" placeholder="Enter password" required autocomplete="current-password">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Authorize Connection <i class="fas fa-sign-in-alt"></i></button>
+        </form>
+    </div>
+
+    <!-- 2. DASHBOARD INTERFACE -->
+    <div class="dashboard-container" id="dashboard-panel">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-logo" style="margin-bottom: 0;">
+                KAUSHAL <span style="font-weight:400; color:var(--text-secondary); font-size:1.1rem; margin-left: 6px;">Portal Dashboard</span>
+            </div>
+            <a class="logout-link" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Terminate Session</a>
+        </div>
+        
+        <!-- Workspace -->
+        <div class="dashboard-body">
+            <!-- Left Side: Composer Form -->
+            <div class="composer-panel">
+                <h3 class="panel-title"><i class="fas fa-pen-nib"></i> Compose New Article</h3>
+                
+                <div class="status-alert alert-success" id="compose-success"></div>
+                <div class="status-alert alert-error" id="compose-error"></div>
+                
+                <form id="blog-form" onsubmit="handlePublish(event)">
+                    <div class="form-group">
+                        <label for="post-title">Article Title</label>
+                        <input type="text" id="post-title" class="form-control" placeholder="e.g. Scaling Tech Bootcamps at EETIRP" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="post-category">Category Node</label>
+                        <select id="post-category" class="form-control" required>
+                            <option value="" disabled selected>Select category...</option>
+                            <option value="AI &amp; Coding">AI &amp; Coding</option>
+                            <option value="Education">Education</option>
+                            <option value="Startup Journey">Startup Journey</option>
+                            <option value="Career Advice">Career Advice</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="post-excerpt">Short Excerpt (Grid Card Preview)</label>
+                        <textarea id="post-excerpt" class="form-control" rows="2" placeholder="Brief summary of the article content..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="post-content">Full Body Content (Alert Popup Detail)</label>
+                        <textarea id="post-content" class="form-control" rows="6" placeholder="Write full transcription content here..." required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="publish-btn">Publish Article <i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+            
+            <!-- Right Side: Active Catalog -->
+            <div class="catalog-panel">
+                <h3 class="panel-title"><i class="fas fa-folder-open"></i> Active Articles Catalog</h3>
+                <div class="catalog-list" id="catalog-list">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INTERACTION LOGIC -->
+    <script>
+        // Check for existing validation state on load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkAuthToken();
+        });
+
+        // Check authentication token
+        async function checkAuthToken() {
+            const token = localStorage.getItem('admin_token');
+            if (!token) {
+                showLogin();
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/validate-token', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await res.json();
+                if (data.valid) {
+                    showDashboard();
+                    loadCatalog();
+                } else {
+                    localStorage.removeItem('admin_token');
+                    showLogin();
+                }
+            } catch (err) {
+                console.error('Error verifying token:', err);
+                showLogin();
+            }
+        }
+
+        // View toggle helpers
+        function showLogin() {
+            document.getElementById('login-panel').style.display = 'block';
+            document.getElementById('dashboard-panel').style.display = 'none';
+            document.body.style.alignItems = 'center';
+        }
+
+        function showDashboard() {
+            document.getElementById('login-panel').style.display = 'none';
+            document.getElementById('dashboard-panel').style.display = 'flex';
+            document.body.style.alignItems = 'center';
+        }
+
+        // Auth Login Handler
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('admin_token', data.token);
+                    showDashboard();
+                    loadCatalog();
+                } else {
+                    errorDiv.innerText = data.error || 'Access denied';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errorDiv.innerText = 'Failed to link backend server.';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Auth Logout Handler
+        async function handleLogout() {
+            const token = localStorage.getItem('admin_token');
+            if (token) {
+                await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            }
+            localStorage.removeItem('admin_token');
+            showLogin();
+        }
+
+        // Load Active Catalog Items
+        async function loadCatalog() {
+            const catalogList = document.getElementById('catalog-list');
+            catalogList.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">Fetching logs...</div>';
+
+            try {
+                const res = await fetch('/api/blogs');
+                const blogs = await res.json();
+                
+                if (blogs.length === 0) {
+                    catalogList.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px; font-weight:500;">No articles active in data collection.</div>';
+                    return;
+                }
+
+                catalogList.innerHTML = blogs.map(blog => `
+                    <div class="catalog-item">
+                        <div>
+                            <div class="catalog-meta">${blog.category}</div>
+                            <div class="catalog-title">${escapeHTML(blog.title)}</div>
+                            <div class="catalog-date">${blog.date}</div>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteBlog('${blog.id || blog._id}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `).join('');
+            } catch (err) {
+                catalogList.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 20px; font-weight:600;">Failed to fetch articles.</div>';
+            }
+        }
+
+        // Add Blog Post Handler
+        async function handlePublish(event) {
+            event.preventDefault();
+            const token = localStorage.getItem('admin_token');
+            const title = document.getElementById('post-title').value;
+            const category = document.getElementById('post-category').value;
+            const excerpt = document.getElementById('post-excerpt').value;
+            const content = document.getElementById('post-content').value;
+            
+            const successDiv = document.getElementById('compose-success');
+            const errorDiv = document.getElementById('compose-error');
+            
+            successDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+            
+            const publishBtn = document.getElementById('publish-btn');
+            publishBtn.disabled = true;
+            publishBtn.innerText = 'Publishing...';
+
+            try {
+                const res = await fetch('/api/blogs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ title, category, excerpt, content })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    successDiv.innerText = 'Article successfully indexed & published!';
+                    successDiv.style.display = 'block';
+                    document.getElementById('blog-form').reset();
+                    loadCatalog();
+                } else {
+                    errorDiv.innerText = data.error || 'Failed to submit article.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errorDiv.innerText = 'Server transmission failure.';
+                errorDiv.style.display = 'block';
+            } finally {
+                publishBtn.disabled = false;
+                publishBtn.innerText = 'Publish Article';
+            }
+        }
+
+        // Delete Blog Post Handler
+        async function deleteBlog(id) {
+            if (!confirm('Are you sure you want to delete this article? This action is permanent.')) return;
+            const token = localStorage.getItem('admin_token');
+
+            try {
+                const res = await fetch(`/api/blogs/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    loadCatalog();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Connection failure to delete article.');
+            }
+        }
+
+        // HTML escaping sanitization helper
+        function escapeHTML(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
