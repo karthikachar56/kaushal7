@@ -1,1501 +1,993 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-black select-none text-green-400 font-mono">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaushal Kumar Baitha | EETIRP Founder & System Dev Terminal</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons for HUD and Terminal aesthetics -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts for retro/cyberpunk style -->
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>Kaushal Kumar Baitha | Founder &amp; CEO of EETIRP</title>
     
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        mono: ['Fira Code', 'Share Tech Mono', 'monospace'],
-                    },
-                    boxShadow: {
-                        'neon-green': '0 0 10px rgba(16, 185, 129, 0.5), 0 0 20px rgba(16, 185, 129, 0.2)',
-                        'neon-blue': '0 0 10px rgba(6, 182, 212, 0.5), 0 0 20px rgba(6, 182, 212, 0.2)',
-                        'neon-pink': '0 0 10px rgba(236, 72, 153, 0.5), 0 0 20px rgba(236, 72, 153, 0.2)',
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        .scanlines {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(
-                rgba(18, 16, 16, 0) 50%, 
-                rgba(0, 0, 0, 0.25) 50%
-            ), linear-gradient(
-                90deg,
-                rgba(255, 0, 0, 0.06),
-                rgba(0, 255, 0, 0.02),
-                rgba(0, 0, 255, 0.06)
-            );
-            background-size: 100% 4px, 6px 100%;
-            z-index: 100;
-            pointer-events: none;
-        }
-
-        .crt-vignette {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 55%, rgba(0,0,0,0.8) 100%);
-            z-index: 101;
-            pointer-events: none;
-        }
-
-        .crt-flicker {
-            animation: textFlicker 0.15s infinite alternate;
-        }
-
-        @keyframes textFlicker {
-            0% { opacity: 0.97; }
-            100% { opacity: 1; }
-        }
-
-        .terminal-glow-green {
-            text-shadow: 0 0 5px rgba(16, 185, 129, 0.6), 0 0 10px rgba(16, 185, 129, 0.4);
-        }
-
-        .terminal-glow-blue {
-            text-shadow: 0 0 5px rgba(6, 182, 212, 0.6), 0 0 10px rgba(6, 182, 212, 0.4);
-        }
-
-        .terminal-glow-pink {
-            text-shadow: 0 0 5px rgba(236, 72, 153, 0.6), 0 0 10px rgba(236, 72, 153, 0.4);
-        }
-
-        /* Matrix live background layout */
-        #matrix-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            opacity: 0.15;
-            pointer-events: none;
-        }
-
-        /* Cyber scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(16, 185, 129, 0.05);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(16, 185, 129, 0.3);
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(16, 185, 129, 0.6);
-        }
-
-        /* Cyber grid matrix overlay */
-        .cyber-grid {
-            background-size: 40px 40px;
-            background-image: 
-                linear-gradient(to right, rgba(16, 185, 129, 0.04) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
-        }
-
-        /* Custom glow borders */
-        .border-neon-green {
-            border-color: rgba(16, 185, 129, 0.4);
-            box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.1), 0 0 10px rgba(16, 185, 129, 0.15);
-        }
-        .border-neon-blue {
-            border-color: rgba(6, 182, 212, 0.4);
-            box-shadow: inset 0 0 10px rgba(6, 182, 212, 0.1), 0 0 10px rgba(6, 182, 212, 0.15);
-        }
-        .border-neon-pink {
-            border-color: rgba(236, 72, 153, 0.4);
-            box-shadow: inset 0 0 10px rgba(236, 72, 153, 0.1), 0 0 10px rgba(236, 72, 153, 0.15);
-        }
-
-        .glitch-text::before {
-            content: attr(data-text);
-            position: absolute;
-            left: -1px;
-            text-shadow: 1px 0 rgba(236, 72, 153, 0.7);
-            clip: rect(44px, 450px, 56px, 0);
-            animation: glitch-anim 5s infinite linear alternate-reverse;
-        }
-
-        @keyframes glitch-anim {
-            0% { clip: rect(15px, 9999px, 66px, 0); }
-            50% { clip: rect(34px, 9999px, 5px, 0); }
-            100% { clip: rect(78px, 9999px, 115px, 0); }
-        }
-
-        /* Typewriter Cursor blinking styling */
-        .cursor-blink::after {
-            content: "█";
-            animation: blink 0.8s infinite;
-        }
-        @keyframes blink {
-            0%, 49% { opacity: 1; }
-            50%, 100% { opacity: 0; }
-        }
-    </style>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Design Stylesheet -->
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="h-screen flex flex-col overflow-hidden relative cyber-grid crt-flicker">
+<body>
 
-    <!-- Background Elements -->
-    <canvas id="matrix-bg"></canvas>
-    <div class="scanlines"></div>
-    <div class="crt-vignette"></div>
-
-    <!-- SYSTEM BOOT DIAGNOSTIC INTRO SCREEN (Writing words opening effect) -->
-    <div id="boot-overlay" class="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center p-6 text-sm font-mono transition-all duration-700">
-        <div class="max-w-2xl w-full border border-emerald-500/30 bg-black/90 p-6 rounded-lg shadow-neon-green relative overflow-hidden">
-            <!-- Screen Header -->
-            <div class="flex items-center justify-between border-b border-emerald-500/20 pb-2 mb-4 text-xs text-emerald-500/60">
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
-                    <span>SYSTEM BOOT SEQUENCER v2.6.4</span>
-                </div>
-                <span>HOST: KAUSHAL_SECURE</span>
-            </div>
-
-            <!-- Diagnostic Lines Output Frame -->
-            <div id="boot-log" class="space-y-2 h-64 overflow-y-auto mb-4 text-xs text-emerald-300 pr-2">
-                <!-- Typed lines will appear here dynamically -->
-            </div>
-
-            <!-- Glitching decryption visual target -->
-            <div id="boot-decryptor" class="border-t border-emerald-500/20 pt-4 hidden">
-                <div class="text-[10px] text-emerald-500/50 mb-1">DECRYPTING USER CLASSIFICATION CODES:</div>
-                <div id="scrambled-text" class="text-lg md:text-xl font-bold tracking-widest text-emerald-400 cursor-blink">
-                    ######## ####### ######
-                </div>
-                <!-- Loading Progress Bar -->
-                <div class="w-full h-2 bg-emerald-950/60 rounded border border-emerald-500/20 overflow-hidden mt-3">
-                    <div id="boot-progress-bar" class="w-0 h-full bg-emerald-500 transition-all duration-200"></div>
-                </div>
-            </div>
-
-            <div class="flex justify-between items-center text-[10px] text-emerald-500/40 mt-4">
-                <span>SECURE ENCRYPTED NODE</span>
-                <button onclick="skipBootSequence()" class="hover:text-emerald-400 transition-colors underline uppercase">Skip Sequence [Bypass]</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Alert Toast System -->
-    <div id="toast-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm pointer-events-none"></div>
-
-    <!-- MAIN SOUND GENERATOR CONTROLLER BUTTON -->
-    <button id="audio-toggle-btn" onclick="toggleAudio()" class="fixed bottom-4 right-4 z-50 px-4 py-2 border border-emerald-500/30 bg-emerald-950/40 text-emerald-400 text-xs rounded-full flex items-center gap-2 hover:bg-emerald-500 hover:text-black transition-all shadow-neon-green pointer-events-auto">
-        <i class="fas fa-volume-mute" id="audio-icon"></i>
-        <span id="audio-status-text">AUDIO OFF</span>
-    </button>
-
-    <!-- TOP TELEMETRY BAR -->
-    <header class="relative z-10 shrink-0 border-b border-emerald-500/20 bg-black/60 backdrop-blur-md px-4 py-2 flex flex-wrap items-center justify-between text-xs gap-2">
-        <div class="flex items-center gap-3">
-            <div class="flex items-center gap-1">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
-                <span class="font-bold tracking-widest text-emerald-400 terminal-glow-green">SECURE HOSTNAME: KAUSHAL_EETIRP_SYS_v2.6.4</span>
-            </div>
-            <div class="hidden sm:flex items-center gap-1.5 border-l border-emerald-500/20 pl-3 text-emerald-500/70">
-                <i class="fas fa-building-columns"></i>
-                <span>COMPANY: EETIRP LTD (FOUNDER)</span>
-            </div>
-            <div class="hidden md:flex items-center gap-1.5 border-l border-emerald-500/20 pl-3 text-emerald-500/70">
-                <i class="fas fa-microchip"></i>
-                <span>CGPA: 8.41</span>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-3">
-            <!-- Theme Color Switcher -->
-            <div class="flex items-center gap-1 border-r border-emerald-500/20 pr-3">
-                <button onclick="changeTheme('green')" class="w-3.5 h-3.5 rounded-full bg-emerald-500 border border-black hover:scale-110 transition-all" title="Matrix Green"></button>
-                <button onclick="changeTheme('cyan')" class="w-3.5 h-3.5 rounded-full bg-cyan-500 border border-black hover:scale-110 transition-all" title="Cyber Cyan"></button>
-                <button onclick="changeTheme('pink')" class="w-3.5 h-3.5 rounded-full bg-pink-500 border border-black hover:scale-110 transition-all" title="Neon Pink"></button>
-            </div>
-            <!-- Interactive Modes Selector -->
-            <div class="flex border border-emerald-500/30 rounded overflow-hidden">
-                <button id="gui-mode-btn" onclick="switchView('gui')" class="px-3 py-1 bg-emerald-500 text-black font-bold transition-all flex items-center gap-1">
-                    <i class="fas fa-th-large"></i> DASHBOARD
-                </button>
-                <button id="terminal-mode-btn" onclick="switchView('terminal')" class="px-3 py-1 hover:bg-emerald-950/80 text-emerald-400 transition-all flex items-center gap-1">
-                    <i class="fas fa-terminal"></i> TERMINAL CLI
-                </button>
-            </div>
+    <!-- STICKY HEADER & NAVBAR -->
+    <header class="header" id="header">
+        <div class="container nav-container">
+            <a href="#" class="logo">
+                KAUSHAL
+                <span class="logo-dot"></span>
+            </a>
+            
+            <ul class="nav-menu" id="nav-menu">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="#journey" class="nav-link">Journey</a></li>
+                <li><a href="#eetirp" class="nav-link">EETIRP</a></li>
+                <li><a href="#projects" class="nav-link">Projects</a></li>
+                <li><a href="#blogs" class="nav-link">Blogs</a></li>
+                <li><a href="#certifications" class="nav-link">Certifications</a></li>
+                <li><a href="#gallery" class="nav-link">Gallery</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+            
+            <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Menu">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </header>
 
-    <!-- MAIN BODY CONTAINER -->
-    <main class="relative z-10 flex-1 flex overflow-hidden p-3 md:p-4 gap-4">
-        
-        <!-- SIDE PANEL: SYSTEM SUMMARY & TELEMETRY (Persistent Left/Hidden on mobile depending on view) -->
-        <aside id="system-panel" class="w-80 border border-emerald-500/20 bg-black/70 backdrop-blur-md rounded-lg flex flex-col overflow-hidden shrink-0 hidden lg:flex">
-            <!-- Section Header -->
-            <div class="p-3 bg-emerald-950/30 border-b border-emerald-500/20 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-user-secret text-emerald-400 animate-pulse"></i>
-                    <span class="font-bold uppercase tracking-wider text-xs">IDENT_CARD.SYS</span>
-                </div>
-                <span class="text-[10px] text-emerald-500/50">SECURE PROFILE</span>
-            </div>
-
-            <!-- Profile Info Scroll Container -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
-            <!-- Retro Avatar with Live Image Integration -->
-            <div class="relative w-36 h-44 mx-auto border-2 border-emerald-500/30 rounded-xl overflow-hidden group bg-emerald-950/20 flex items-center justify-center shadow-neon-green">
-                <!-- High-fidelity custom photograph integrated with fallback loading safeguards -->
-                <img id="profile-picture" 
-                     src="kaushal.jpeg" 
-                     alt="Kaushal Kumar Baitha" 
-                     class="w-full h-full object-cover filter contrast-[1.15] brightness-[0.85] grayscale group-hover:grayscale-0 group-hover:brightness-100 group-hover:contrast-100 transition-all duration-500" 
-                     onerror="this.onerror=null; this.src='https://placehold.co/150x150/10b981/000000?text=Kaushal';">
-                
-                <!-- Color theme overlay mask that responds dynamically on theme changes -->
-                <div id="photo-overlay-tint" class="absolute inset-0 bg-emerald-500/10 group-hover:bg-transparent transition-all pointer-events-none mix-blend-color"></div>
-                <div class="absolute bottom-1 inset-x-0 text-center text-[10px] bg-black/85 py-0.5 border-t border-emerald-500/20 font-bold tracking-widest text-emerald-400 z-10">
-                    KAUSHAL K.B.
-                </div>
-            </div>
-
-            <!-- Info Cards -->
-                <div class="space-y-2">
-                    <div class="p-2.5 rounded border border-emerald-500/10 bg-emerald-950/10 hover:border-emerald-500/30 transition-all">
-                        <div class="text-[10px] text-emerald-500/50">PRIMARY ROLE</div>
-                        <div class="font-bold text-emerald-300">Founder &amp; Full Stack Developer</div>
-                        <div class="text-emerald-500/70 text-[10px]">EETIRP LTD</div>
-                    </div>
-                    <div class="p-2.5 rounded border border-emerald-500/10 bg-emerald-950/10 hover:border-emerald-500/30 transition-all">
-                        <div class="text-[10px] text-emerald-500/50">ACADEMIC PARADIGM</div>
-                        <div class="font-bold text-emerald-300">Sapthagiri NPS University</div>
-                        <div class="text-emerald-500/70 text-[10px]">Computer Science (CGPA: 8.41)</div>
-                    </div>
-                    <div class="p-2.5 rounded border border-emerald-500/10 bg-emerald-950/10 hover:border-emerald-500/30 transition-all">
-                        <div class="text-[10px] text-emerald-500/50">CURRENT ENCRYPTION KEY (EMAIL)</div>
-                        <a href="mailto:kaushalbaitha74@gmail.com" class="font-bold text-emerald-300 hover:text-emerald-400 select-all block truncate">
-                            <i class="far fa-envelope mr-1"></i> kaushalbaitha74@gmail.com
-                        </a>
-                    </div>
-                    <div class="p-2.5 rounded border border-emerald-500/10 bg-emerald-950/10 hover:border-emerald-500/30 transition-all">
-                        <div class="text-[10px] text-emerald-500/50">SECURE COMMS (MOBILE)</div>
-                        <a href="tel:+918088487801" class="font-bold text-emerald-300 hover:text-emerald-400 block">
-                            <i class="fas fa-phone-alt mr-1"></i> +91 8088487801
-                        </a>
-                    </div>
-                    <div class="p-2.5 rounded border border-emerald-500/10 bg-emerald-950/10 hover:border-emerald-500/30 transition-all">
-                        <div class="text-[10px] text-emerald-500/50">COORDINATES</div>
-                        <div class="font-bold text-emerald-300">Chikkabanavara, Bengaluru</div>
-                    </div>
-                </div>
-
-                <!-- Live Network Signal Visualizer -->
-                <div class="pt-2 border-t border-emerald-500/10">
-                    <div class="flex items-center justify-between text-[10px] text-emerald-500/60 mb-2">
-                        <span>EETIRP BEACON FEED</span>
-                        <span class="animate-pulse text-emerald-400">● LIVE</span>
-                    </div>
-                    <div class="h-10 flex items-end gap-1 overflow-hidden" id="signal-bars">
-                        <!-- Instantiated by JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="p-3 bg-emerald-950/20 border-t border-emerald-500/20 text-[10px] text-center text-emerald-500/40">
-                AUTHORIZED PERSONNEL ONLY
-            </div>
-        </aside>
-
-        <!-- CORE MULTI-VIEW SECTION -->
-        <section class="flex-1 flex flex-col min-w-0 h-full relative">
-            
-            <!-- 1. DASHBOARD PORTFOLIO VIEW (GUI MODE) -->
-            <div id="gui-viewport" class="absolute inset-0 flex flex-col gap-4 overflow-y-auto pr-1">
-                
-                <!-- TERMINAL GREETING / SUMMARY WIDGET -->
-                <div class="border border-emerald-500/20 bg-black/75 backdrop-blur-md rounded-lg p-4 relative overflow-hidden shrink-0">
-                    <div class="absolute right-4 top-4 text-emerald-500/10 pointer-events-none">
-                        <i class="fas fa-building-shield text-8xl"></i>
-                    </div>
-                    <div class="flex items-center gap-2 mb-2 text-xs font-bold text-emerald-500/60 uppercase tracking-widest">
-                        <i class="fas fa-shield-halved"></i> 
-                        <span>SYSTEM DECODER: IDENTITY OVERVIEW</span>
-                    </div>
-                    <h1 class="text-2xl md:text-3xl font-black text-emerald-400 tracking-wider terminal-glow-green mb-2 glitch-text" data-text="KAUSHAL KUMAR BAITHA">
-                        KAUSHAL KUMAR BAITHA
-                    </h1>
-                    <p class="text-xs md:text-sm text-emerald-300 max-w-3xl leading-relaxed">
-                        **Founder &amp; Full Stack Developer at EETIRP LTD**—a next-generation technology, innovation, and student AI ecosystem. Computer Science and Engineering specialist combining engineering leadership with robust analytical capacities. Backed by solid foundations in modern software pipelines, microservice deployment, and architecture validated in <span class="text-emerald-400 font-bold select-all">"5_6111493846640632602.pdf"</span>.
+    <!-- HERO SECTION -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <span class="hero-greeting reveal">
+                        <span class="badge">EETIRP Ecosystem Active</span>
+                        Founder &amp; CEO of EETIRP
+                    </span>
+                    <h1 class="hero-title reveal delay-100">Kaushal Kumar Baitha</h1>
+                    <h2 class="hero-subtitle reveal delay-200">Building the future of student AI &amp; Career Training</h2>
+                    <p class="hero-desc reveal delay-300">
+                        Democratizing industry-level education, placement bootcamps, and adaptive AI assessment networks for students across India. Leading systems design, platform code, and business roadmap strategies.
                     </p>
-                    <div class="mt-4 flex flex-wrap gap-2 text-xs">
-                        <a href="https://github.com/kaushalbaitha7" target="_blank" class="px-3 py-1.5 rounded border border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-500 hover:text-black hover:scale-105 transition-all flex items-center gap-1.5 font-bold">
-                            <i class="fab fa-github"></i> GITHUB LINK
-                        </a>
-                        <a href="https://www.linkedin.com/in/kaushal-kumar-baitha-3b4b41369/" target="_blank" class="px-3 py-1.5 rounded border border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-500 hover:text-black hover:scale-105 transition-all flex items-center gap-1.5 font-bold">
-                            <i class="fab fa-linkedin"></i> LINKEDIN NODE
-                        </a>
-                        <button onclick="triggerHackSimulation()" class="px-3 py-1.5 rounded border border-red-500/30 bg-red-950/20 hover:bg-red-500 hover:text-white hover:scale-105 transition-all flex items-center gap-1.5 font-bold text-red-400 shadow-neon-pink">
-                            <i class="fas fa-skull"></i> FORCE BYPASS
-                        </button>
+                    <div class="hero-buttons reveal delay-400">
+                        <a href="#contact" class="btn btn-primary">Connect With Me <i class="fas fa-arrow-right"></i></a>
+                        <a href="#eetirp" class="btn btn-secondary"><i class="fas fa-building"></i> Learn about EETIRP</a>
                     </div>
                 </div>
-
-                <!-- CORE SKILLS METRICS -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <!-- Tech Skills -->
-                    <div class="md:col-span-2 border border-emerald-500/20 bg-black/75 backdrop-blur-md rounded-lg p-4 flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-3">
-                                <span class="text-xs font-bold text-emerald-500/60 uppercase tracking-wider">SKILLS_DATABASE.DB</span>
-                                <span class="text-[10px] text-emerald-400/80 px-2 py-0.5 bg-emerald-950/50 rounded border border-emerald-500/30">MODULE ACTIVE</span>
-                            </div>
-                            <!-- Live Progress Skill Bars -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-emerald-300">Java & Object-Oriented Pipelines</span>
-                                        <span class="text-emerald-400">85%</span>
-                                    </div>
-                                    <div class="h-2 w-full bg-emerald-950/50 rounded overflow-hidden border border-emerald-500/20">
-                                        <div class="h-full bg-emerald-500 shadow-neon-green" style="width: 85%"></div>
-                                    </div>
-                                </div>
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-emerald-300">C Language Core Execution</span>
-                                        <span class="text-emerald-400">80%</span>
-                                    </div>
-                                    <div class="h-2 w-full bg-emerald-950/50 rounded overflow-hidden border border-emerald-500/20">
-                                        <div class="h-full bg-emerald-500 shadow-neon-green" style="width: 80%"></div>
-                                    </div>
-                                </div>
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-emerald-300">React.js & Front-End Decoders</span>
-                                        <span class="text-emerald-400">90%</span>
-                                    </div>
-                                    <div class="h-2 w-full bg-emerald-950/50 rounded overflow-hidden border border-emerald-500/20">
-                                        <div class="h-full bg-emerald-500 shadow-neon-green" style="width: 90%"></div>
-                                    </div>
-                                </div>
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-emerald-300">Node.js & Express.js Back-End</span>
-                                        <span class="text-emerald-400">85%</span>
-                                    </div>
-                                    <div class="h-2 w-full bg-emerald-950/50 rounded overflow-hidden border border-emerald-500/20">
-                                        <div class="h-full bg-emerald-500 shadow-neon-green" style="width: 85%"></div>
-                                    </div>
-                                </div>
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-emerald-300">MongoDB / Document Stores</span>
-                                        <span class="text-emerald-400">75%</span>
-                                    </div>
-                                    <div class="h-2 w-full bg-emerald-950/50 rounded overflow-hidden border border-emerald-500/20">
-                                        <div class="h-full bg-emerald-500 shadow-neon-green" style="width: 75%"></div>
-                                    </div>
-                                </div>
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-emerald-300">DSA & Complexity Optimization</span>
-                                        <span class="text-emerald-400">70%</span>
-                                    </div>
-                                    <div class="h-2 w-full bg-emerald-950/50 rounded overflow-hidden border border-emerald-500/20">
-                                        <div class="h-full bg-emerald-500 shadow-neon-green" style="width: 70%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- System Tools Sub-grid -->
-                        <div class="mt-4 pt-3 border-t border-emerald-500/10">
-                            <span class="text-[10px] text-emerald-500/60 font-bold uppercase block mb-2">SYSTEM WORKTOOLS INVENTORY:</span>
-                            <div class="flex flex-wrap gap-1.5">
-                                <span class="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-[10px]">VS Code</span>
-                                <span class="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-[10px]">PyCharm</span>
-                                <span class="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-[10px]">Eclipse</span>
-                                <span class="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-[10px]">Git</span>
-                                <span class="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-[10px]">IntelliJ IDEA</span>
-                                <span class="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-[10px]">Firebase API</span>
-                                <span class="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-[10px]">PWA Architecture</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Work History Chronology Terminal -->
-                    <div class="border border-emerald-500/20 bg-black/75 backdrop-blur-md rounded-lg p-4 flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-3">
-                                <span class="text-xs font-bold text-emerald-500/60 uppercase tracking-wider">CHRONOLOGY.LOG</span>
-                                <i class="fas fa-history text-emerald-500/40"></i>
-                            </div>
-                            
-                            <!-- Timeline node -->
-                            <div class="relative pl-4 border-l-2 border-emerald-500/30 space-y-4">
-                                <div class="relative">
-                                    <div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-black animate-pulse"></div>
-                                    <div class="text-[10px] text-emerald-400 font-bold">AUG 2025 - PRESENT</div>
-                                    <h4 class="font-bold text-emerald-200 text-xs">Founder &amp; Full Stack Developer</h4>
-                                    <p class="text-[11px] text-emerald-500/80">EETIRP LTD</p>
-                                    <p class="text-[10px] text-emerald-300 mt-1 leading-relaxed">
-                                        Launched and architected a comprehensive student digital ecosystem, directing AI career roadmaps, tools development, and systems design.
-                                    </p>
-                                </div>
-                                <div class="relative">
-                                    <div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-500/40 border-2 border-black"></div>
-                                    <div class="text-[10px] text-emerald-500/60 font-bold">MAY 2025 - JAN 2026</div>
-                                    <h4 class="font-bold text-emerald-300/80 text-xs">Intern System Engineer</h4>
-                                    <p class="text-[11px] text-emerald-500/60">Coders Arcade</p>
-                                    <p class="text-[10px] text-emerald-300 mt-1 leading-relaxed">
-                                        Contributed directly to admissions, candidate verifications, and counselling processing databases.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 pt-3 border-t border-emerald-500/10 flex items-center justify-between text-[11px] text-emerald-500/50">
-                            <span>VENTURES: 1 ACTIVE</span>
-                            <span>SYS_INTEGRITY: 100%</span>
-                        </div>
+                <div class="hero-image-wrapper reveal-scale delay-200">
+                    <div class="hero-image-frame">
+                        <img src="kaushal.jpeg" alt="Kaushal Kumar Baitha" class="hero-img" onerror="this.onerror=null; this.src='https://placehold.co/320x400/6366f1/ffffff?text=Kaushal';">
                     </div>
                 </div>
-
-                <!-- PROJECT ARCHIVE CONTROLLERS (INTERACTIVE FLUID SYSTEM) -->
-                <div class="border border-emerald-500/20 bg-black/75 backdrop-blur-md rounded-lg p-4">
-                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-emerald-500/10">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-folder-open text-emerald-400"></i>
-                            <span class="text-xs font-bold uppercase tracking-wider">EETIRP_PROJECT_ARCHIVES.VOL (4 ACTIVE NODES)</span>
-                        </div>
-                        <span class="text-[10px] text-emerald-500/60">CLICK EACH NODE TO ACTIVATE DIRECT DECRYPTION</span>
-                    </div>
-
-                    <!-- Project Nodes Wrapper -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        
-                        <!-- Project 1 -->
-                        <div class="p-4 rounded border border-emerald-500/10 bg-emerald-950/5 hover:border-emerald-500/40 hover:bg-emerald-950/20 transition-all flex flex-col justify-between cursor-pointer group" onclick="expandProject('verthink')">
-                            <div>
-                                <div class="flex justify-between items-start mb-2">
-                                    <h3 class="font-bold text-emerald-300 group-hover:text-emerald-400 transition-colors text-sm">VerThink - AI Student Hub</h3>
-                                    <span class="text-[9px] px-1.5 py-0.5 rounded border border-emerald-500/20 bg-emerald-950/40 text-emerald-400">PWA / FIREBASE</span>
-                                </div>
-                                <p class="text-[11px] text-emerald-300/80 leading-relaxed mb-3">
-                                    Mobile-responsive learning environment utilizing offline service workers, offline modules, and cloud administration.
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-between text-[10px] text-emerald-500/60">
-                                <span>BUILD: SYSTEM V1.0</span>
-                                <span class="group-hover:translate-x-1 transition-transform text-emerald-400">READ SPECS <i class="fas fa-chevron-right ml-1"></i></span>
-                            </div>
-                        </div>
-
-                        <!-- Project 2 -->
-                        <div class="p-4 rounded border border-emerald-500/10 bg-emerald-950/5 hover:border-emerald-500/40 hover:bg-emerald-950/20 transition-all flex flex-col justify-between cursor-pointer group" onclick="expandProject('kaura')">
-                            <div>
-                                <div class="flex justify-between items-start mb-2">
-                                    <h3 class="font-bold text-emerald-300 group-hover:text-emerald-400 transition-colors text-sm">KAURA - Digital Ecosystem</h3>
-                                    <span class="text-[9px] px-1.5 py-0.5 rounded border border-emerald-500/20 bg-emerald-950/40 text-emerald-400">EETIRP LTD PLATFORM</span>
-                                </div>
-                                <p class="text-[11px] text-emerald-300/80 leading-relaxed mb-3">
-                                    Centralized student-centric ecosystem featuring resume builders, smart timetables, AI career mentors, and aptitude suites.
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-between text-[10px] text-emerald-500/60">
-                                <span>BUILD: SYSTEM V2.4</span>
-                                <span class="group-hover:translate-x-1 transition-transform text-emerald-400">READ SPECS <i class="fas fa-chevron-right ml-1"></i></span>
-                            </div>
-                        </div>
-
-                        <!-- Project 3 -->
-                        <div class="p-4 rounded border border-emerald-500/10 bg-emerald-950/5 hover:border-emerald-500/40 hover:bg-emerald-950/20 transition-all flex flex-col justify-between cursor-pointer group" onclick="expandProject('placement')">
-                            <div>
-                                <div class="flex justify-between items-start mb-2">
-                                    <h3 class="font-bold text-emerald-300 group-hover:text-emerald-400 transition-colors text-sm">Placement AI Platform</h3>
-                                    <span class="text-[9px] px-1.5 py-0.5 rounded border-cyan-500/20 bg-cyan-950/40 text-cyan-400">MERN FULLSTACK</span>
-                                </div>
-                                <p class="text-[11px] text-emerald-300/80 leading-relaxed mb-3">
-                                    Career preparation ecosystem deploying adaptive AI Mock Interviews, resume intelligence, and performance trackers.
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-between text-[10px] text-emerald-500/60">
-                                <span>BUILD: PRODUCTION v3.0</span>
-                                <span class="group-hover:translate-x-1 transition-transform text-emerald-400">READ SPECS <i class="fas fa-chevron-right ml-1"></i></span>
-                            </div>
-                        </div>
-
-                        <!-- Project 4 -->
-                        <div class="p-4 rounded border border-emerald-500/10 bg-emerald-950/5 hover:border-emerald-500/40 hover:bg-emerald-950/20 transition-all flex flex-col justify-between cursor-pointer group" onclick="expandProject('gyanguru')">
-                            <div>
-                                <div class="flex justify-between items-start mb-2">
-                                    <h3 class="font-bold text-emerald-300 group-hover:text-emerald-400 transition-colors text-sm">GyanGuru - NEET Counselling</h3>
-                                    <span class="text-[9px] px-1.5 py-0.5 rounded border-cyan-500/20 bg-cyan-950/40 text-cyan-400">REST API / MONGODB</span>
-                                </div>
-                                <p class="text-[11px] text-emerald-300/80 leading-relaxed mb-3">
-                                    NEET Admission database framework driving profile verifications, bank records, and counseling queues.
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-between text-[10px] text-emerald-500/60">
-                                <span>BUILD: STABLE v1.1</span>
-                                <span class="group-hover:translate-x-1 transition-transform text-emerald-400">READ SPECS <i class="fas fa-chevron-right ml-1"></i></span>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- 2. RETRO INTERACTIVE TERMINAL VIEW (CLI MODE) -->
-            <div id="terminal-viewport" class="absolute inset-0 flex flex-col border border-emerald-500/20 bg-black/90 backdrop-blur-md rounded-lg overflow-hidden hidden">
-                <!-- Terminal Top Bar -->
-                <div class="px-4 py-2 bg-emerald-950/40 border-b border-emerald-500/20 flex items-center justify-between text-xs text-emerald-400">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-terminal"></i>
-                        <span>SYSTEM SHELL: kaushal@eetirp:~#</span>
-                    </div>
-                    <div class="flex gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-red-500/60"></span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/60"></span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-green-500/60"></span>
-                    </div>
-                </div>
-
-                <!-- CLI Terminal Output Buffer -->
-                <div id="terminal-output" class="flex-1 p-4 overflow-y-auto space-y-2 text-xs md:text-sm text-emerald-300 font-mono scroll-smooth selection:bg-emerald-800 selection:text-white">
-                    <div>Welcome to KAUSHAL_EETIRP_OS [Version 2.6.4]</div>
-                    <div>(c) 2026 Kaushal Kumar Baitha. EETIRP LTD Secure Linkage Active. Verified by "5_6111493846640632602.pdf".</div>
-                    <br>
-                    <div>Type <span class="text-emerald-400 font-bold underline cursor-pointer" onclick="executeTermCommand('help')">help</span> to explore available commands (e.g., projects, skills, about, hack, socials).</div>
-                    <br>
-                </div>
-
-                <!-- Terminal Touch Action Buttons for Mobile Accessibility -->
-                <div class="p-2 border-t border-emerald-500/10 bg-black/50 flex flex-wrap gap-1 md:hidden">
-                    <button onclick="executeTermCommand('help')" class="px-2 py-1 bg-emerald-950/50 border border-emerald-500/30 text-[10px] text-emerald-300 rounded hover:bg-emerald-500 hover:text-black">help</button>
-                    <button onclick="executeTermCommand('about')" class="px-2 py-1 bg-emerald-950/50 border border-emerald-500/30 text-[10px] text-emerald-300 rounded hover:bg-emerald-500 hover:text-black">about</button>
-                    <button onclick="executeTermCommand('skills')" class="px-2 py-1 bg-emerald-950/50 border border-emerald-500/30 text-[10px] text-emerald-300 rounded hover:bg-emerald-500 hover:text-black">skills</button>
-                    <button onclick="executeTermCommand('projects')" class="px-2 py-1 bg-emerald-950/50 border border-emerald-500/30 text-[10px] text-emerald-300 rounded hover:bg-emerald-500 hover:text-black">projects</button>
-                    <button onclick="executeTermCommand('hack')" class="px-2 py-1 bg-emerald-950/50 border border-red-500/30 text-[10px] text-red-400 rounded hover:bg-red-500 hover:text-black">hack</button>
-                    <button onclick="executeTermCommand('socials')" class="px-2 py-1 bg-emerald-950/50 border border-emerald-500/30 text-[10px] text-emerald-300 rounded hover:bg-emerald-500 hover:text-black">socials</button>
-                    <button onclick="executeTermCommand('clear')" class="px-2 py-1 bg-emerald-950/50 border border-emerald-500/30 text-[10px] text-emerald-300 rounded hover:bg-emerald-500 hover:text-black">clear</button>
-                </div>
-
-                <!-- Input prompt line -->
-                <div class="p-3 bg-black border-t border-emerald-500/20 flex items-center gap-2 text-xs md:text-sm shrink-0">
-                    <span class="text-emerald-400 font-bold">kaushal@eetirp:~#</span>
-                    <input type="text" id="terminal-input-el" class="flex-1 bg-transparent text-emerald-300 outline-none border-none font-mono focus:ring-0 placeholder-emerald-500/40" placeholder="Enter shell command..." autofocus autocomplete="off">
-                </div>
-            </div>
-
-        </section>
-
-        <!-- RIGHT HUD PANEL (TACTICAL telemetry or Mini Bypass Hacking Puzzle) -->
-        <section id="hacker-game-panel" class="w-80 border border-emerald-500/20 bg-black/70 backdrop-blur-md rounded-lg flex flex-col overflow-hidden shrink-0 hidden xl:flex">
-            <!-- Header -->
-            <div class="p-3 bg-emerald-950/30 border-b border-emerald-500/20 flex items-center justify-between text-xs font-bold">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-shield-virus text-emerald-400"></i>
-                    <span>CYBER_DEFENSE.EXE</span>
-                </div>
-                <span class="text-[10px] text-emerald-500/50">MATCH THE NODES</span>
-            </div>
-
-            <!-- Mini Hacking Memory Bypass Game -->
-            <div class="flex-1 p-4 flex flex-col justify-between text-xs relative overflow-hidden">
-                <div>
-                    <div class="mb-3 text-emerald-400 font-bold text-center uppercase tracking-wide">
-                        FIREWALL ACCESS BYPASS
-                    </div>
-                    <p class="text-[11px] text-emerald-500/80 mb-4 leading-relaxed text-center">
-                        Secure connection requested. Activate matching system nodes of the same index color in minimum steps to bypass firewall filters.
-                    </p>
-
-                    <!-- Game Matrix Screen -->
-                    <div class="grid grid-cols-4 gap-2 mb-4" id="hacking-puzzle-grid">
-                        <!-- Built dynamically by JS -->
-                    </div>
-
-                    <div class="flex justify-between items-center text-[11px] px-2 py-1 bg-emerald-950/20 border border-emerald-500/10 rounded">
-                        <span class="text-emerald-500/60">TRIES REMAINING:</span>
-                        <span id="hack-tries-count" class="font-bold text-emerald-400">8</span>
-                    </div>
-                </div>
-
-                <div class="space-y-2 mt-4">
-                    <button onclick="initializeHackPuzzle()" class="w-full py-1.5 border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-500 hover:text-black rounded transition-all font-bold text-center text-[10px] tracking-widest uppercase">
-                        REGENERATE INTERCEPTOR
-                    </button>
-                    <div class="text-[9px] text-emerald-500/40 text-center uppercase tracking-wider">
-                        PORT CODES REFRESHED CONSTANTLY
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer Telemetry -->
-            <div class="p-3 bg-emerald-950/20 border-t border-emerald-500/20 text-[10px] flex justify-between items-center">
-                <span>GEO_LATENCY: 12ms</span>
-                <span>STATUS: SECURE</span>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- EXPANDED SPECIFICATION MODAL DRAWER -->
-    <div id="project-spec-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 hidden opacity-0 transition-opacity duration-300">
-        <div class="w-full max-w-2xl border border-emerald-500/30 bg-black/95 rounded-lg overflow-hidden shadow-neon-green flex flex-col max-h-[90vh]">
-            <div class="p-3.5 bg-emerald-950/50 border-b border-emerald-500/20 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-file-code text-emerald-400" id="modal-icon"></i>
-                    <span id="modal-title-system" class="text-xs font-bold uppercase tracking-wider">PROJECT_METRIC.SYS</span>
-                </div>
-                <button onclick="closeProjectSpec()" class="text-emerald-500 hover:text-emerald-300 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto space-y-4 text-xs md:text-sm text-emerald-300" id="modal-body-content">
-                <!-- Dynamically populated -->
-            </div>
-            <div class="p-3.5 bg-emerald-950/20 border-t border-emerald-500/20 flex justify-end gap-2 text-xs">
-                <button onclick="closeProjectSpec()" class="px-4 py-2 border border-emerald-500/30 hover:bg-emerald-500 hover:text-black rounded transition-all font-bold uppercase">
-                    CLOSE RECORD
-                </button>
             </div>
         </div>
-    </div>
-
-    <!-- TERMINAL AUTO RUN POPUPS & MODALS -->
-    <div id="custom-alert-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 hidden">
-        <div class="max-w-md w-full border border-red-500/50 bg-black rounded-lg p-6 shadow-neon-pink text-center space-y-4">
-            <div class="text-red-500 animate-pulse text-4xl">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <h3 class="text-lg font-bold text-red-400 uppercase tracking-widest" id="custom-alert-title">SYSTEM ALERT</h3>
-            <p class="text-xs text-emerald-300 leading-relaxed" id="custom-alert-msg"></p>
-            <button onclick="closeCustomAlert()" class="px-5 py-2 border border-red-500/30 bg-red-950/20 text-red-400 hover:bg-red-500 hover:text-black rounded font-mono text-xs font-bold transition-all uppercase tracking-widest">
-                Acknowledge Threat
-            </button>
+        <div class="scroll-indicator reveal delay-500">
+            <span>Scroll Down</span>
+            <i class="fas fa-chevron-down"></i>
         </div>
-    </div>
+    </section>
 
-    <!-- AUDIO SYNTHESIS & BEACON MATRIX JS ENGINE -->
-    <script>
-        let audioCtx = null;
-        let isAudioOn = false;
-
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-        }
-
-        function toggleAudio() {
-            initAudio();
-            const btn = document.getElementById('audio-toggle-btn');
-            const icon = document.getElementById('audio-icon');
-            const statusText = document.getElementById('audio-status-text');
-
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
-            isAudioOn = !isAudioOn;
-            if (isAudioOn) {
-                icon.className = "fas fa-volume-up text-emerald-400";
-                statusText.innerText = "AUDIO ON";
-                btn.classList.add('bg-emerald-500/10');
-                btn.classList.add('border-emerald-500');
-                playSynthBeep(600, 0.1, 'triangle');
-                setTimeout(() => playSynthBeep(800, 0.1, 'triangle'), 100);
-                showToast("Synthesizer nodes active & listening", "info");
-            } else {
-                icon.className = "fas fa-volume-mute";
-                statusText.innerText = "AUDIO OFF";
-                btn.classList.remove('bg-emerald-500/10');
-                btn.classList.remove('border-emerald-500');
-            }
-        }
-
-        function playSynthBeep(frequency = 440, duration = 0.08, type = 'sine', volume = 0.1) {
-            if (!isAudioOn || !audioCtx) return;
-            try {
-                const osc = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                
-                osc.type = type;
-                osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-                
-                gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-                
-                osc.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch (err) {
-                console.warn("Audio Context block", err);
-            }
-        }
-
-        function playAlertSound() {
-            if (!isAudioOn || !audioCtx) return;
-            let count = 0;
-            const interval = setInterval(() => {
-                playSynthBeep(180, 0.15, 'sawtooth', 0.15);
-                count++;
-                if (count >= 3) clearInterval(interval);
-            }, 200);
-        }
-
-        function playTypewriterSound() {
-            if (!isAudioOn || !audioCtx) return;
-            const randomPitch = 600 + Math.random() * 400;
-            playSynthBeep(randomPitch, 0.03, 'sine', 0.03);
-        }
-    </script>
-
-    <!-- SECURE TYPEWRITING BOOT SEQUENCER -->
-    <script>
-        const bootLogData = [
-            { text: "CRITICAL BOOT LOAD STARTING...", speed: 200 },
-            { text: "ESTABLISHING SECURE CONNECTION TO EETIRP LTD CORE HOUSING... SUCCESS", speed: 350 },
-            { text: "VERIFYING ENCRYPTED CREDENTIAL MATRIX '5_6111493846640632602.pdf' ... SUCCESS", speed: 400 },
-            { text: "INITIALIZING RETRO CODES DECRYPT MODULES...", speed: 200 },
-            { text: " > CADET PROFILE: KAUSHAL KUMAR BAITHA", speed: 300 },
-            { text: " > FOUNDING PROTOCOLS: ACTIVE (EETIRP LTD FOUNDED)", speed: 400 },
-            { text: " > RECONSTRUCTING EDUCATIONAL PARADIGMS...", speed: 200 },
-            { text: "   [OK] SAPTHAGIRI NPS UNIVERSITY (COMPUTER SCIENCE)", speed: 150 },
-            { text: "   [OK] ACADEMIC TARGET STATE: 8.41 CGPA", speed: 150 },
-            { text: " > PARSING EETIRP DIGITAL ASSETS ARCHIVE:", speed: 200 },
-            { text: "   [OK] VERTHINK - STUDENT LEARNING PWA (Firebase Realtime)", speed: 100 },
-            { text: "   [OK] KAURA - STUDENT DIGITAL ECOSYSTEM (EETIRP Subsidiary)", speed: 100 },
-            { text: "   [OK] PLACEMENT AI PLATFORM - AI MOCK RECRUITMENT NODES", speed: 100 },
-            { text: "   [OK] GYANGURU - NEET ADMISSIONS PIPELINE (Render Deploy)", speed: 100 },
-            { text: " > VERIFYING WORKSPACE CHRONOLOGY...", speed: 300 },
-            { text: "   [OK] FOUNDER & FULL STACK DEVELOPER - EETIRP LTD", speed: 200 },
-            { text: "   [OK] SYSTEM ENGINEERING INTERN - CODERS ARCADE", speed: 200 },
-            { text: "DEPLOYING DATA CHANNELS..." , speed: 400 }
-        ];
-
-        let bootIndex = 0;
-        const logElement = document.getElementById('boot-log');
-
-        function startBootSequence() {
-            try {
-                initAudio();
-                if (audioCtx && audioCtx.state !== 'suspended') {
-                    isAudioOn = true;
-                    updateAudioStatusUI();
-                }
-            } catch (err) {
-                console.log("Audio autoplay restricted. Waiting for interaction.");
-            }
-            typeNextBootLine();
-        }
-
-        function updateAudioStatusUI() {
-            const btn = document.getElementById('audio-toggle-btn');
-            const icon = document.getElementById('audio-icon');
-            const statusText = document.getElementById('audio-status-text');
-            if (isAudioOn) {
-                icon.className = "fas fa-volume-up text-emerald-400";
-                statusText.innerText = "AUDIO ON";
-                btn.classList.add('bg-emerald-500/10', 'border-emerald-500');
-            } else {
-                icon.className = "fas fa-volume-mute";
-                statusText.innerText = "AUDIO OFF";
-                btn.classList.remove('bg-emerald-500/10', 'border-emerald-500');
-            }
-        }
-
-        document.addEventListener('click', function() {
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume().then(() => {
-                    isAudioOn = true;
-                    updateAudioStatusUI();
-                    playSynthBeep(600, 0.1, 'triangle');
-                });
-            }
-        }, { once: true });
-
-        function typeNextBootLine() {
-            if (bootIndex < bootLogData.length) {
-                const line = bootLogData[bootIndex];
-                const row = document.createElement('div');
-                row.className = "font-mono border-l-2 border-emerald-500/40 pl-2 py-0.5";
-                logElement.appendChild(row);
-                logElement.scrollTop = logElement.scrollHeight;
-
-                let charIndex = 0;
-                function writeChar() {
-                    if (charIndex < line.text.length) {
-                        row.textContent += line.text[charIndex];
-                        charIndex++;
-                        playTypewriterSound();
-                        setTimeout(writeChar, 10 + Math.random() * 15);
-                    } else {
-                        bootIndex++;
-                        setTimeout(typeNextBootLine, line.speed);
-                    }
-                }
-                writeChar();
-            } else {
-                setTimeout(revealDecryptionSection, 500);
-            }
-        }
-
-        function revealDecryptionSection() {
-            const decryptor = document.getElementById('boot-decryptor');
-            decryptor.classList.remove('hidden');
-            playSynthBeep(500, 0.15, 'sawtooth');
-
-            const targetName = "KAUSHAL KUMAR BAITHA";
-            const scrambledEl = document.getElementById('scrambled-text');
-            const progressBar = document.getElementById('boot-progress-bar');
+    <!-- ABOUT SECTION (BENTO GRID) -->
+    <section class="section" id="about">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>About Me</h2>
+                <p>Personal brand dimensions, educational foundations, and vision metrics</p>
+            </div>
             
-            let progress = 0;
-            let tick = 0;
-            const scrambleChars = "$%#@!*&^?-+[]{}<>/\\";
+            <div class="about-bento-grid">
+                <!-- Bio Card -->
+                <div class="bento-card bento-bio reveal">
+                    <h3 class="bento-card-title">
+                        <i class="fas fa-user-tie"></i> Executive Profile &amp; Vision
+                    </h3>
+                    <p>
+                        I am the Founder and CEO of <strong>EETIRP</strong>. My core mission is to bridge the massive gap between academic curricula and actual tech industry requirements. Through adaptive AI simulators, automated coding evaluations, and placement preparations, we empower students to unlock peak technical capability.
+                    </p>
+                    <p>
+                        Combining systems engineering depth in Java, OOP, and the MERN stack with strategic business leadership, I oversee product roadmaps, deployment cycles, and academic institution partnerships.
+                    </p>
+                </div>
+                
+                <!-- Education Card -->
+                <div class="bento-card bento-education reveal delay-100">
+                    <h3 class="bento-card-title">
+                        <i class="fas fa-graduation-cap"></i> Education
+                    </h3>
+                    <div class="edu-item">
+                        <div class="edu-school">Sapthagiri NPS University</div>
+                        <div class="edu-degree">B.E. in Computer Science &amp; Engineering</div>
+                        <div class="edu-meta">CGPA: 8.41 | Aug 2025 - Pursuing</div>
+                    </div>
+                    <div class="edu-item">
+                        <div class="edu-degree">Certification Verification</div>
+                        <div class="edu-meta">Credentials authenticated by diagnostic checklist "5_6111493846640632602.pdf".</div>
+                    </div>
+                </div>
+                
+                <!-- Contact Info Card -->
+                <div class="bento-card bento-contact-info reveal delay-200">
+                    <h3 class="bento-card-title">
+                        <i class="fas fa-network-wired"></i> Quick Comms
+                    </h3>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <a href="mailto:kaushalbaitha74@gmail.com" class="select-all">kaushalbaitha74@gmail.com</a>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone-alt"></i>
+                        <a href="tel:+918088487801">+91 8088487801</a>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Bengaluru, India</span>
+                    </div>
+                    <div class="contact-item" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                        <i class="fas fa-circle" style="color: var(--accent); font-size: 0.75rem; animation: pulse 2s infinite;"></i>
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent);">Status: Serving Active Cohorts</span>
+                    </div>
+                </div>
+                
+                <!-- Worktools Card -->
+                <div class="bento-card bento-tools reveal delay-100">
+                    <h3 class="bento-card-title">
+                        <i class="fas fa-laptop-code"></i> Engineering Skill Stack
+                    </h3>
+                    <div class="tools-grid">
+                        <div class="tool-chip"><i class="fab fa-git-alt"></i> Git &amp; GitHub</div>
+                        <div class="tool-chip"><i class="fas fa-code"></i> VS Code &amp; IntelliJ</div>
+                        <div class="tool-chip"><i class="fas fa-database"></i> MongoDB Atlas</div>
+                        <div class="tool-chip"><i class="fab fa-react"></i> React.js Framework</div>
+                        <div class="tool-chip"><i class="fab fa-node-js"></i> Node.js &amp; Express</div>
+                        <div class="tool-chip"><i class="fas fa-cubes"></i> Firebase API</div>
+                        <div class="tool-chip"><i class="fas fa-rocket"></i> PWA &amp; Service Workers</div>
+                        <div class="tool-chip"><i class="fas fa-server"></i> Vercel &amp; Render</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-            const interval = setInterval(() => {
-                tick++;
-                progress += 5;
-                progressBar.style.width = `${progress}%`;
-                playSynthBeep(300 + (tick * 40), 0.05, 'triangle', 0.06);
+    <!-- FOUNDER JOURNEY SECTION -->
+    <section class="section" id="journey" style="background: rgba(15, 23, 42, 0.015); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>Founder Journey</h2>
+                <p>The history, challenges, milestones, and future vision of EETIRP</p>
+            </div>
+            
+            <div class="journey-grid">
+                <!-- Journey 1 -->
+                <div class="journey-card reveal">
+                    <div class="journey-badge"><i class="fas fa-seedling"></i></div>
+                    <h3>Why I Started EETIRP</h3>
+                    <p>
+                        I noticed an alarming disconnect during my early academic career: while companies demanded practical exposure to software workflows, microservice architectures, and data design, classrooms focused almost exclusively on dry theory. I started EETIRP to build an interactive, hands-on student ecosystem providing automated code evaluations, AI mentors, and industry-oriented training.
+                    </p>
+                </div>
+                
+                <!-- Journey 2 -->
+                <div class="journey-card reveal delay-100">
+                    <div class="journey-badge"><i class="fas fa-mountain"></i></div>
+                    <h3>Challenges Overcome</h3>
+                    <p>
+                        Launching a startup as a student in Bengaluru is demanding. We faced early difficulties deploying high-volume API registration loops, scaling candidate admission databases under heavy traffic, and designing lightweight algorithms that adapt to individual capability matrices. Standardizing backend routes using Express and MongoDB Atlas solved these database bottlenecks.
+                    </p>
+                </div>
+                
+                <!-- Journey 3 -->
+                <div class="journey-card reveal">
+                    <div class="journey-badge"><i class="fas fa-trophy"></i></div>
+                    <h3>Key Milestones</h3>
+                    <p>
+                        Successfully bootstrapped the flagship student dashboard system, launched placement bootcamps in major institutions, and deployed multiple core apps. We have designed AI-powered placement evaluators, candidate screening systems, and smart scheduling trackers, successfully helping students verify credentials and master programming pipelines.
+                    </p>
+                </div>
+                
+                <!-- Journey 4 -->
+                <div class="journey-card reveal delay-100">
+                    <div class="journey-badge"><i class="fas fa-bullseye"></i></div>
+                    <h3>Future Goals</h3>
+                    <p>
+                        Our mission for the next 12 months is expanding the EETIRP ecosystem with nationwide bootcamps, automated candidate tracking networks, and native AI interview simulators (Butterfly AI). We are aligning university programs directly with tech recruiters to build a seamless, friction-free gateway for student hiring.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                let result = "";
-                for (let i = 0; i < targetName.length; i++) {
-                    if (targetName[i] === " ") {
-                        result += " ";
-                    } else if (i < (tick / 2)) {
-                        result += targetName[i];
-                    } else {
-                        result += scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
-                    }
-                }
-                scrambledEl.textContent = result;
+    <!-- EETIRP COMPANY HIGHLIGHT SECTION -->
+    <section class="section" id="eetirp">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>EETIRP Ecosystem</h2>
+                <p>A separate corporate structure built to revolutionize college tech training</p>
+            </div>
+            
+            <div class="eetirp-banner reveal-scale">
+                <div class="eetirp-banner-content">
+                    <span class="badge" style="background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.2);">Company Profile</span>
+                    <h3>eetirp.com</h3>
+                    <p>
+                        EETIRP LTD is a next-generation technology, innovation, and student AI ecosystem. We operate independently to deliver courses, bootcamps, mock interview portals, and placement assistance pipelines. By linking personal engineering tools directly to company requirements, we create a highly effective gateway for student readiness.
+                    </p>
+                    <a href="https://eetirp.com" target="_blank" class="btn btn-primary" style="background: #ffffff; color: #1e3a8a;"><i class="fas fa-external-link-alt"></i> Visit EETIRP Platform</a>
+                </div>
+                <div class="eetirp-stats-grid">
+                    <div class="eetirp-stat-box">
+                        <div class="eetirp-stat-number">4+</div>
+                        <div class="eetirp-stat-label">Active Apps</div>
+                    </div>
+                    <div class="eetirp-stat-box">
+                        <div class="eetirp-stat-number">100+</div>
+                        <div class="eetirp-stat-label">Students Mentored</div>
+                    </div>
+                    <div class="eetirp-stat-box">
+                        <div class="eetirp-stat-number">10+</div>
+                        <div class="eetirp-stat-label">Tech Bootcamps</div>
+                    </div>
+                    <div class="eetirp-stat-box">
+                        <div class="eetirp-stat-number">95%</div>
+                        <div class="eetirp-stat-label">Success Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    scrambledEl.textContent = targetName;
-                    playSynthBeep(1000, 0.4, 'sine', 0.15);
+    <!-- PROJECTS SECTION -->
+    <section class="section" id="projects" style="background: rgba(15, 23, 42, 0.015); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>Featured Projects</h2>
+                <p>Full-stack applications, AI assessment engines, and digital utilities</p>
+            </div>
+            
+            <div class="projects-grid">
+                <!-- Project 1 -->
+                <div class="project-card reveal-scale">
+                    <div>
+                        <div class="project-card-header">
+                            <h3>KauraHub</h3>
+                            <span class="badge">EETIRP Subsidiary</span>
+                        </div>
+                        <p class="project-card-desc">
+                            Flagship student digital dashboard featuring smart resume builders, semester resources, custom schedules, and aptitude trainers.
+                        </p>
+                        <div class="project-tech-tags">
+                            <span class="tech-tag">JavaScript ES6</span>
+                            <span class="tech-tag">Vercel Deploy</span>
+                            <span class="tech-tag">AI Pipeline</span>
+                            <span class="tech-tag">Responsive UI</span>
+                        </div>
+                    </div>
+                    <div class="project-card-footer">
+                        <span class="project-status"><i class="fas fa-circle"></i> Operational Hub</span>
+                        <a onclick="openProjectModal('kaurahub')" class="project-link-btn">Specs &amp; Details <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Project 2 -->
+                <div class="project-card reveal-scale delay-100">
+                    <div>
+                        <div class="project-card-header">
+                            <h3>EETIRP Platform</h3>
+                            <span class="badge">Core Ecosystem</span>
+                        </div>
+                        <p class="project-card-desc">
+                            PWA portal driving learning workflows, AI career roadmaps, push notifications, and offline caching structures.
+                        </p>
+                        <div class="project-tech-tags">
+                            <span class="tech-tag">HTML5 / CSS3</span>
+                            <span class="tech-tag">Firebase DB</span>
+                            <span class="tech-tag">Service Workers</span>
+                            <span class="tech-tag">PWA Architecture</span>
+                        </div>
+                    </div>
+                    <div class="project-card-footer">
+                        <span class="project-status"><i class="fas fa-circle"></i> Active Pipeline</span>
+                        <a onclick="openProjectModal('eetirp')" class="project-link-btn">Specs &amp; Details <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Project 3 -->
+                <div class="project-card reveal-scale">
+                    <div>
+                        <div class="project-card-header">
+                            <h3>Placement AI</h3>
+                            <span class="badge">Live Deployment</span>
+                        </div>
+                        <p class="project-card-desc">
+                            MERN-stack ecosystem enabling adaptive mock interviews, resume scanners, and performance feedback logs.
+                        </p>
+                        <div class="project-tech-tags">
+                            <span class="tech-tag">React.js</span>
+                            <span class="tech-tag">Node.js</span>
+                            <span class="tech-tag">Express.js</span>
+                            <span class="tech-tag">MongoDB Atlas</span>
+                        </div>
+                    </div>
+                    <div class="project-card-footer">
+                        <span class="project-status"><i class="fas fa-circle"></i> Live Production</span>
+                        <a onclick="openProjectModal('placementai')" class="project-link-btn">Specs &amp; Details <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Project 4 -->
+                <div class="project-card reveal-scale delay-100">
+                    <div>
+                        <div class="project-card-header">
+                            <h3>Attendance System</h3>
+                            <span class="badge">Stable Release</span>
+                        </div>
+                        <p class="project-card-desc">
+                            Smart barcode/RFID login log system connecting physical entry scans to a remote MongoDB server dashboard.
+                        </p>
+                        <div class="project-tech-tags">
+                            <span class="tech-tag">Java OOP</span>
+                            <span class="tech-tag">Express APIs</span>
+                            <span class="tech-tag">MongoDB</span>
+                            <span class="tech-tag">Telemetry charts</span>
+                        </div>
+                    </div>
+                    <div class="project-card-footer">
+                        <span class="project-status"><i class="fas fa-circle"></i> Stable Framework</span>
+                        <a onclick="openProjectModal('attendance')" class="project-link-btn">Specs &amp; Details <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                </div>
+
+                <!-- Project 5 -->
+                <div class="project-card reveal-scale">
+                    <div>
+                        <div class="project-card-header">
+                            <h3>Butterfly AI</h3>
+                            <span class="badge">Active Beta</span>
+                        </div>
+                        <p class="project-card-desc">
+                            Adaptive learning engine mapping student skills and custom suggesting lesson sets based on progress tests.
+                        </p>
+                        <div class="project-tech-tags">
+                            <span class="tech-tag">Python Core</span>
+                            <span class="tech-tag">REST handlers</span>
+                            <span class="tech-tag">React.js</span>
+                            <span class="tech-tag">Express.js</span>
+                        </div>
+                    </div>
+                    <div class="project-card-footer">
+                        <span class="project-status"><i class="fas fa-circle"></i> Active Beta</span>
+                        <a onclick="openProjectModal('butterflyai')" class="project-link-btn">Specs &amp; Details <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                </div>
+
+                <!-- Project 6 -->
+                <div class="project-card reveal-scale delay-100">
+                    <div>
+                        <div class="project-card-header">
+                            <h3>MCQ Platform</h3>
+                            <span class="badge">Stable Module</span>
+                        </div>
+                        <p class="project-card-desc">
+                            Interactive randomized quiz generator with JWT validation, cheat protection, and adaptive difficulty.
+                        </p>
+                        <div class="project-tech-tags">
+                            <span class="tech-tag">React.js</span>
+                            <span class="tech-tag">Node.js Core</span>
+                            <span class="tech-tag">MongoDB Atlas</span>
+                            <span class="tech-tag">Render Deploy</span>
+                        </div>
+                    </div>
+                    <div class="project-card-footer">
+                        <span class="project-status"><i class="fas fa-circle"></i> Stable Integration</span>
+                        <a onclick="openProjectModal('mcq')" class="project-link-btn">Specs &amp; Details <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                </div>
+
+                <!-- Project 7 -->
+                <div class="project-card reveal-scale">
+                    <div>
+                        <div class="project-card-header">
+                            <h3>Consultancy Platform</h3>
+                            <span class="badge">Operational</span>
+                        </div>
+                        <p class="project-card-desc">
+                            Student-mentor connection engine matching career goals with industry guides using smart schedulers.
+                        </p>
+                        <div class="project-tech-tags">
+                            <span class="tech-tag">React.js</span>
+                            <span class="tech-tag">Express Routing</span>
+                            <span class="tech-tag">MongoDB</span>
+                            <span class="tech-tag">REST APIs</span>
+                        </div>
+                    </div>
+                    <div class="project-card-footer">
+                        <span class="project-status"><i class="fas fa-circle"></i> Operational Specs</span>
+                        <a onclick="openProjectModal('consultancy')" class="project-link-btn">Specs &amp; Details <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOGS SECTION -->
+    <section class="section" id="blogs">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>Blogs &amp; Updates</h2>
+                <p>Consistently sharing startup chronicles, technology guidelines, and career tracks</p>
+            </div>
+            
+            <div class="blog-grid">
+                <!-- Blog 1 -->
+                <article class="blog-card reveal-scale">
+                    <div class="blog-card-image">
+                        <i class="fas fa-chalkboard-user"></i>
+                    </div>
+                    <div class="blog-card-content">
+                        <div class="blog-meta">
+                            <span class="blog-category">Education</span>
+                            <span class="blog-date">July 15, 2026</span>
+                        </div>
+                        <h3 class="blog-title">Placement Bootcamps: Scaling Technical Training</h3>
+                        <p class="blog-excerpt">
+                            Behind the scenes of our recent EETIRP placement bootcamp. Key strategies on teaching data modeling, microservice routers, and system designs.
+                        </p>
+                        <span class="blog-readmore" onclick="showBlogAlert('Placement Bootcamps', 'Today we conducted a placement bootcamp covering fullstack routes, Express middlewares, and mock interview preparations. Over 50 students successfully connected their local repositories to our assessment databases!')">Read Article <i class="fas fa-chevron-right"></i></span>
+                    </div>
+                </article>
+                
+                <!-- Blog 2 -->
+                <article class="blog-card reveal-scale delay-100">
+                    <div class="blog-card-image">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="blog-card-content">
+                        <div class="blog-meta">
+                            <span class="blog-category">AI &amp; Coding</span>
+                            <span class="blog-date">July 08, 2026</span>
+                        </div>
+                        <h3 class="blog-title">Butterfly AI: Deploying Adaptive Mock Simulators</h3>
+                        <p class="blog-excerpt">
+                            How we developed an adaptive mock interview model. Technical challenges in handling prompt tokens, real-time logging, and score dashboards.
+                        </p>
+                        <span class="blog-readmore" onclick="showBlogAlert('Butterfly AI Development', 'We have successfully deployed a beta test of Butterfly AI, suggeting lessons based on student test scores. The API routes maintain secure JWT verification and achieve less than 80ms latency.')">Read Article <i class="fas fa-chevron-right"></i></span>
+                    </div>
+                </article>
+                
+                <!-- Blog 3 -->
+                <article class="blog-card reveal-scale delay-200">
+                    <div class="blog-card-image">
+                        <i class="fab fa-java"></i>
+                    </div>
+                    <div class="blog-card-content">
+                        <div class="blog-meta">
+                            <span class="blog-category">Career Advice</span>
+                            <span class="blog-date">June 28, 2026</span>
+                        </div>
+                        <h3 class="blog-title">Java Foundations: Cracking Object-Oriented Loops</h3>
+                        <p class="blog-excerpt">
+                            Common Java interview patterns that trip up graduates. A review of garbage collection logic, threading, interfaces, and memory models.
+                        </p>
+                        <span class="blog-readmore" onclick="showBlogAlert('Java Interview Mastery', 'A complete roadmap detailing the primary Java OOP patterns, memory profiles, and multithreading schemas frequently checked during technical evaluations at leading firms.')">Read Article <i class="fas fa-chevron-right"></i></span>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- CERTIFICATIONS SECTION -->
+    <section class="section" id="certifications" style="background: #ffffff; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>Certifications</h2>
+                <p>Validated credentials and professional training accomplishments</p>
+            </div>
+            
+            <div class="certifications-grid">
+                <!-- Cert 1 -->
+                <div class="cert-card reveal-scale">
+                    <div class="cert-icon"><i class="fas fa-brain"></i></div>
+                    <div class="cert-content">
+                        <h3>Introduction to Modern AI</h3>
+                        <p class="cert-issuer">CISCO</p>
+                    </div>
+                </div>
+                
+                <!-- Cert 2 -->
+                <div class="cert-card reveal-scale delay-100">
+                    <div class="cert-icon"><i class="fas fa-shield-halved"></i></div>
+                    <div class="cert-content">
+                        <h3>Cyber Security Foundation</h3>
+                        <p class="cert-issuer">Infosys</p>
+                    </div>
+                </div>
+                
+                <!-- Cert 3 -->
+                <div class="cert-card reveal-scale delay-200">
+                    <div class="cert-icon"><i class="fas fa-user-secret"></i></div>
+                    <div class="cert-content">
+                        <h3>Learn Ethical Hacking from Scratch</h3>
+                        <p class="cert-issuer">Udemy</p>
+                    </div>
+                </div>
+                
+                <!-- Cert 4 -->
+                <div class="cert-card reveal-scale">
+                    <div class="cert-icon"><i class="fas fa-laptop-code"></i></div>
+                    <div class="cert-content">
+                        <h3>Full Stack Web Development</h3>
+                        <p class="cert-issuer">Udemy</p>
+                    </div>
+                </div>
+                
+                <!-- Cert 5 -->
+                <div class="cert-card reveal-scale delay-100">
+                    <div class="cert-icon"><i class="fab fa-java"></i></div>
+                    <div class="cert-content">
+                        <h3>Java Foundation</h3>
+                        <p class="cert-issuer">Infosys</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MEDIA, EVENTS & GALLERY SECTION -->
+    <section class="section" id="gallery">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>Media &amp; Events Gallery</h2>
+                <p>Capturing active college bootcamps, workshops, and startup team updates</p>
+            </div>
+            
+            <!-- Filters -->
+            <div class="gallery-filter-buttons reveal">
+                <button class="filter-btn active" onclick="filterGallery('all', this)">All Media</button>
+                <button class="filter-btn" onclick="filterGallery('workshops', this)">Workshops</button>
+                <button class="filter-btn" onclick="filterGallery('bootcamps', this)">Bootcamps</button>
+                <button class="filter-btn" onclick="filterGallery('team', this)">Team Activities</button>
+            </div>
+            
+            <!-- Grid -->
+            <div class="gallery-grid reveal-scale">
+                <!-- Item 1 -->
+                <div class="gallery-item" data-category="workshops">
+                    <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80" alt="College Tech Workshop" class="gallery-item-image">
+                    <div class="gallery-item-overlay">
+                        <span class="gallery-item-category">Workshops</span>
+                        <h4 class="gallery-item-title">College Tech Workshop</h4>
+                    </div>
+                </div>
+                
+                <!-- Item 2 -->
+                <div class="gallery-item" data-category="bootcamps">
+                    <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80" alt="EETIRP Placement Bootcamp" class="gallery-item-image">
+                    <div class="gallery-item-overlay">
+                        <span class="gallery-item-category">Bootcamps</span>
+                        <h4 class="gallery-item-title">EETIRP Placement Bootcamp</h4>
+                    </div>
+                </div>
+                
+                <!-- Item 3 -->
+                <div class="gallery-item" data-category="team">
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80" alt="EETIRP Core Team Session" class="gallery-item-image">
+                    <div class="gallery-item-overlay">
+                        <span class="gallery-item-category">Team Activities</span>
+                        <h4 class="gallery-item-title">Core Team Session</h4>
+                    </div>
+                </div>
+                
+                <!-- Item 4 -->
+                <div class="gallery-item" data-category="workshops">
+                    <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80" alt="AI &amp; Coding Lecture" class="gallery-item-image">
+                    <div class="gallery-item-overlay">
+                        <span class="gallery-item-category">Workshops</span>
+                        <h4 class="gallery-item-title">AI &amp; Coding Lecture</h4>
+                    </div>
+                </div>
+                
+                <!-- Item 5 -->
+                <div class="gallery-item" data-category="bootcamps">
+                    <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=600&q=80" alt="Hands-on Placement Prep" class="gallery-item-image">
+                    <div class="gallery-item-overlay">
+                        <span class="gallery-item-category">Bootcamps</span>
+                        <h4 class="gallery-item-title">Hands-on Placement Prep</h4>
+                    </div>
+                </div>
+                
+                <!-- Item 6 -->
+                <div class="gallery-item" data-category="team">
+                    <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80" alt="College Event Engagement" class="gallery-item-image">
+                    <div class="gallery-item-overlay">
+                        <span class="gallery-item-category">Team Activities</span>
+                        <h4 class="gallery-item-title">College Event Engagement</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT SECTION -->
+    <section class="section" id="contact" style="background: rgba(15, 23, 42, 0.015); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>Connect Array</h2>
+                <p>Initiate direct communications, check credentials, or download resume files</p>
+            </div>
+            
+            <div class="contact-layout">
+                <div class="contact-info-cards reveal-left">
+                    <!-- Card 1 -->
+                    <div class="contact-mini-card">
+                        <div class="contact-icon-wrapper">
+                            <i class="far fa-envelope"></i>
+                        </div>
+                        <div class="contact-mini-content">
+                            <h4>Email Communications</h4>
+                            <p><a href="mailto:kaushalbaitha74@gmail.com" class="select-all">kaushalbaitha74@gmail.com</a></p>
+                        </div>
+                    </div>
                     
-                    setTimeout(() => {
-                        const overlay = document.getElementById('boot-overlay');
-                        overlay.classList.add('opacity-0', 'scale-105');
-                        setTimeout(() => {
-                            overlay.remove();
-                            showToast("Decryption complete! Security keys locked.", "success");
-                        }, 700);
-                    }, 800);
-                }
-            }, 100);
-        }
+                    <!-- Card 2 -->
+                    <div class="contact-mini-card">
+                        <div class="contact-icon-wrapper">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <div class="contact-mini-content">
+                            <h4>Mobile Node</h4>
+                            <p><a href="tel:+918088487801">+91 8088487801</a></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Card 3 -->
+                    <div class="contact-mini-card">
+                        <div class="contact-icon-wrapper">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="contact-mini-content">
+                            <h4>Download CV File</h4>
+                            <p><a href="#" onclick="alert('Downloading CV files. Connection active.'); return false;" class="select-all" style="font-weight: 700; color: var(--primary);">Resume_Kaushal.pdf <i class="fas fa-download ml-1" style="font-size: 0.8rem;"></i></a></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contact-form-wrapper reveal-right delay-100">
+                    <form class="contact-form" id="contact-form" onsubmit="handleContactSubmit(event)">
+                        <div class="form-group">
+                            <label for="form-name">Full Name</label>
+                            <input type="text" id="form-name" class="form-control" placeholder="Enter your name" required autocomplete="name">
+                        </div>
+                        <div class="form-group">
+                            <label for="form-email">Email Address</label>
+                            <input type="email" id="form-email" class="form-control" placeholder="Enter your email" required autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="form-message">Transmission Content</label>
+                            <textarea id="form-message" class="form-control" rows="5" placeholder="Enter details..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Transmit Signal <i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        function skipBootSequence() {
-            const overlay = document.getElementById('boot-overlay');
-            if (overlay) {
-                overlay.remove();
-            }
-            showToast("Bypass accepted. Portfolio active.", "info");
-        }
-    </script>
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-layout">
+            <div class="logo">
+                KAUSHAL
+                <span class="logo-dot"></span>
+            </div>
+            
+            <div class="footer-socials">
+                <a href="https://www.linkedin.com/in/kaushal-kumar-baitha-3b4b41369/" target="_blank" class="social-circle" aria-label="LinkedIn Profile">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="https://github.com/kaushalbaitha7" target="_blank" class="social-circle" aria-label="GitHub Profile">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://instagram.com/" target="_blank" class="social-circle" aria-label="Instagram Profile">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="mailto:kaushalbaitha74@gmail.com" class="social-circle" aria-label="Send Email">
+                    <i class="far fa-envelope"></i>
+                </a>
+                <a href="tel:+918088487801" class="social-circle" aria-label="Call Mobile">
+                    <i class="fas fa-phone-alt"></i>
+                </a>
+            </div>
+            
+            <div>
+                <p class="footer-copyright">&copy; 2026 Kaushal Kumar Baitha. All Rights Reserved.</p>
+                <div class="footer-eetirp-badge">
+                    Founder of <span>EETIRP</span> | Student Career Training &amp; AI Roadmaps
+                </div>
+            </div>
+        </div>
+    </footer>
 
-    <!-- MATRIX LIVE RAIN BACKGROUND CANVAS RENDERING -->
+    <!-- INTERACTIVE PROJECT MODAL CONTAINER -->
+    <div class="modal" id="project-modal" onclick="closeProjectModalOnOverlay(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Project Details</h3>
+                <button class="modal-close-btn" onclick="closeProjectModal()" aria-label="Close Modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Filled dynamically by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- CORE INTERACTION JAVASCRIPT -->
     <script>
-        const canvas = document.getElementById('matrix-bg');
-        const ctx = canvas.getContext('2d');
-
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
-
-        let activeColor = '#10b981'; // Default emerald color
-        let binaryAlphabet = '01101011011000010111010101110011011010000110000101101100'; // "kaushal" binary
-        const fontSize = 14;
-        let columns = width / fontSize;
-
-        const rainDrops = [];
-
-        for (let x = 0; x < columns; x++) {
-            rainDrops[x] = 1;
-        }
-
-        function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-            ctx.fillRect(0, 0, width, height);
-
-            ctx.fillStyle = activeColor;
-            ctx.font = fontSize + 'px monospace';
-
-            for (let i = 0; i < rainDrops.length; i++) {
-                const text = binaryAlphabet.charAt(Math.floor(Math.random() * binaryAlphabet.length));
-                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
-
-                if (rainDrops[i] * fontSize > height && Math.random() > 0.975) {
-                    rainDrops[i] = 0;
-                }
-                rainDrops[i]++;
+        // Sticky Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
             }
-        }
+            
+            // Activate navigation links based on scroll position
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            let currentSection = 'home';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 120;
+                if (window.scrollY >= sectionTop) {
+                    currentSection = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${currentSection}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
 
-        let matrixInterval = setInterval(drawMatrix, 30);
-
-        window.addEventListener('resize', () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            columns = width / fontSize;
-            for (let x = 0; x < columns; x++) {
-                if (rainDrops[x] === undefined) rainDrops[x] = 1;
+        // Mobile Menu toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const navMenu = document.getElementById('nav-menu');
+        
+        menuToggle.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+            const icon = menuToggle.querySelector('i');
+            if (navMenu.classList.contains('active')) {
+                icon.className = 'fas fa-times';
+            } else {
+                icon.className = 'fas fa-bars';
             }
         });
-    </script>
 
-    <!-- TOAST & CUSTOM UI NOTIFICATIONS -->
-    <script>
-        function showToast(message, type = "success") {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            let colorClasses = "border-emerald-500/40 text-emerald-400 bg-black/90";
-            let icon = '<i class="fas fa-check-circle text-emerald-400"></i>';
-            
-            if (type === "warning") {
-                colorClasses = "border-amber-500/40 text-amber-400 bg-black/90";
-                icon = '<i class="fas fa-exclamation-triangle text-amber-400"></i>';
-                playSynthBeep(400, 0.2, 'triangle');
-            } else if (type === "danger") {
-                colorClasses = "border-red-500/40 text-red-400 bg-black/90";
-                icon = '<i class="fas fa-skull text-red-400 animate-pulse"></i>';
-                playAlertSound();
-            } else if (type === "info") {
-                colorClasses = "border-cyan-500/40 text-cyan-400 bg-black/90";
-                icon = '<i class="fas fa-info-circle text-cyan-400"></i>';
-                playSynthBeep(800, 0.1, 'sine');
-            } else {
-                playSynthBeep(700, 0.1, 'sine');
-            }
+        // Close mobile menu on nav link click
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+                menuToggle.querySelector('i').className = 'fas fa-bars';
+            });
+        });
 
-            toast.className = `p-3 rounded-lg border flex items-center gap-3 shadow-lg pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0 text-xs ${colorClasses}`;
-            toast.innerHTML = `
-                ${icon}
-                <div class="flex-1">${message}</div>
-            `;
+        // Animate progress bars when skills section is reached
+        const observeSkills = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const progressBars = entry.target.querySelectorAll('.skill-progress-bar');
+                    progressBars.forEach(bar => {
+                        const pct = bar.getAttribute('data-percentage');
+                        bar.style.width = pct;
+                    });
+                    observeSkills.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
 
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
+        const skillsSection = document.getElementById('skills');
+        if (skillsSection) observeSkills.observe(skillsSection);
 
-            setTimeout(() => {
-                toast.classList.add('translate-y-[-20px]', 'opacity-0');
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
-            }, 4000);
-        }
-
-        function triggerCustomAlert(title, message) {
-            document.getElementById('custom-alert-title').innerText = title;
-            document.getElementById('custom-alert-msg').innerText = message;
-            document.getElementById('custom-alert-modal').classList.remove('hidden');
-            playAlertSound();
-        }
-
-        function closeCustomAlert() {
-            document.getElementById('custom-alert-modal').classList.add('hidden');
-            playSynthBeep(300, 0.1, 'sine');
-        }
-    </script>
-
-    <!-- CORE INTERACTION: PORTFOLIO SPECS DATA -->
-    <script>
-        const projectData = {
-            verthink: {
-                title: "VerThink - AI-Powered Student Learning Platform",
-                subtitle: "Advanced Hybrid Progressive Web Application",
-                tech: ["HTML5", "CSS3", "JavaScript ES6", "Firebase Realtime DB", "JSON Configs", "PWA Architecture", "Service Workers"],
+        // Project Specifications Details Data Store (7 Projects)
+        const projectSpecs = {
+            kaurahub: {
+                title: "KauraHub Student Dashboard",
+                subtitle: "Unified Student Central Hub under EETIRP",
+                role: "Founder & Core Platform Architect",
+                status: "Operational / Core Hub Online",
+                desc: [
+                    "Formulated and launched the flagship digital student-centric ecosystem under EETIRP, unifying scholastic utilities and performance tools.",
+                    "Built responsive widgets including Resume Builder, Placement Preparation frameworks, Semester Notes Hub, Smart Timetables, Aptitude Training suites, and a robust AI Career Mentor module.",
+                    "Structured decoupled modular navigation architecture supporting future iterations of AI coordination, authorization systems, and cloud DB models."
+                ],
+                tech: ["HTML5 / CSS3", "JavaScript", "GitHub Integration", "Vercel Cloud", "Responsive UI/UX Des.", "AI Careers Pipeline"]
+            },
+            eetirp: {
+                title: "EETIRP Main Platform",
+                subtitle: "AI Career Roadmap & Student AI Ecosystems",
+                role: "Founder & CEO",
+                status: "Active / Fully Integrated",
                 desc: [
                     "Engineered a fully mobile-responsive Progressive Web Application delivering learning resources, soft-skill matrices, motivational hubs, and career paths.",
                     "Configured background push notifications and caching frameworks via service worker protocols, lowering load latency while allowing offline-first content accessibility.",
                     "Integrated comprehensive content panel controls for instant curation of digital materials, streamlining student routing maps."
                 ],
-                role: "Lead Full-Stack PWA Architect",
-                status: "Operational / Fully Integrated"
+                tech: ["HTML5", "CSS3", "JavaScript ES6", "Firebase Realtime DB", "JSON Configs", "PWA Architecture", "Service Workers"]
             },
-            kaura: {
-                title: "KAURA - Student Digital Ecosystem Platform",
-                subtitle: "Unified Central Student Hub under EETIRP LTD",
-                tech: ["HTML5 / CSS3", "JavaScript", "GitHub Integration", "Vercel Cloud", "Responsive UI/UX Des.", "AI Careers Pipeline"],
-                desc: [
-                    "Formulated and launched the flagship digital student-centric ecosystem under EETIRP LTD, unifying scholastic utilities and performance tools.",
-                    "Built responsive widgets including Resume Builder, Placement Preparation frameworks, Semester Notes Hub, Smart Timetables, Aptitude Training suites, and a robust AI Career Mentor module.",
-                    "Structured decoupled modular navigation architecture supporting future iterations of AI coordination, authorization systems, and cloud DB models."
-                ],
-                role: "Founder & Core Platform Architect",
-                status: "Operational / Core Hub Online"
-            },
-            placement: {
-                title: "Placement AI Platform - Placement Prep System",
+            placementai: {
+                title: "Placement AI Platform",
                 subtitle: "AI Career Prep Machine",
-                tech: ["React.js", "Node.js", "Express.js", "MongoDB", "RESTful Routing", "Railway Deploy Engine", "Vercel Edge Pipelines"],
+                role: "MERN Stack Engineer",
+                status: "Live Production Deployment",
                 desc: [
                     "Built secure end-to-end API infrastructures enabling real-time adaptive AI Mock Interviews, resumes intelligence analysis, and simulated performance metrics tracking.",
                     "Deployed cloud database schemas inside MongoDB Atlas utilizing secure modeling to keep student test data precisely tabulated across various domains.",
                     "Created robust, responsive component architectures with advanced mock-testing telemetry metrics to ensure fluid mobile viewport optimization."
                 ],
-                role: "MERN Stack Engineer",
-                status: "Live Production Deployment"
+                tech: ["React.js", "Node.js", "Express.js", "MongoDB", "RESTful Routing", "Railway Deploy Engine", "Vercel Edge Pipelines"]
             },
-            gyanguru: {
-                title: "GyanGuru - NEET Counselling & Admission Hub",
-                subtitle: "Automated Verification & Counselling Pipeline",
-                tech: ["React.js", "Node.js Core", "Express.js", "MongoDB", "REST Handlers", "Vercel Front", "Render Service Backend"],
+            attendance: {
+                title: "Telemetry Attendance System",
+                subtitle: "Smart logging and telemetry",
+                role: "Full Stack Developer",
+                status: "Stable Release",
                 desc: [
-                    "Coded full-scale candidate registration pipelines, mapping candidate records including profile states, verification pipelines, bank details, and counselling queues.",
-                    "Integrated optimized queries inside MongoDB Atlas resulting in stable transactions and precise indexing during heavy admission traffic windows.",
-                    "Standardized response models across all backend routes, integrating secure JWT handshakes and strict request body validations."
+                    "Programmed barcode/RFID student login systems logging attendance states into remote servers.",
+                    "Constructed detailed telemetry graph metrics dashboards showing logs and tracking reports.",
+                    "Standardized JSON response frames to keep communications path secure."
                 ],
-                role: "Backend & Systems Integration Specialist (Coders Arcade)",
-                status: "Stable / Legacy Framework"
+                tech: ["Java OOP", "Express APIs", "React.js", "MongoDB Atlas", "Chart.js"]
+            },
+            butterflyai: {
+                title: "Butterfly AI Engine",
+                subtitle: "Adaptive learning model",
+                role: "AI Systems Engineer",
+                status: "Active Beta testing",
+                desc: [
+                    "Deploys semantic neural model suggestions suggest lessons and assessment tests adaptively.",
+                    "Integrates with student score logs database to dynamically calibrate difficulty scales.",
+                    "Maintains sub-80ms API handshake latency."
+                ],
+                tech: ["Python Core", "REST handlers", "React.js", "Express.js", "JWT Tokens"]
+            },
+            mcq: {
+                title: "Adaptive MCQ Test Runner",
+                subtitle: "Adaptive assessments",
+                role: "Full Stack Engineer",
+                status: "Stable Integration",
+                desc: [
+                    "Deployed adaptive randomized quiz generator models featuring time-tracking widgets.",
+                    "Secured session tokens via strict JWT handshakes to prevent cheat behaviors.",
+                    "Compiled scoring telemetry data schemas."
+                ],
+                tech: ["React.js", "Node.js Core", "Express.js", "MongoDB Atlas", "Render Deploy"]
+            },
+            consultancy: {
+                title: "Consultancy & Mentorship Matcher",
+                subtitle: "Student-mentor matcher",
+                role: "Systems Integration Specialist",
+                status: "Operational Framework",
+                desc: [
+                    "Coded mentorship matching engines mapping student capability indexes to professional guide profiles.",
+                    "Created smart calendar schedule widgets using secure booking API routes.",
+                    "Optimized database lookup times."
+                ],
+                tech: ["React.js", "Express Routing", "Node.js", "MongoDB", "RESTful APIs"]
             }
         };
 
-        function expandProject(key) {
-            playSynthBeep(650, 0.12, 'sawtooth');
-            const project = projectData[key];
-            if (!project) return;
+        // Modal Functionality
+        const modal = document.getElementById('project-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
 
-            const techBadges = project.tech.map(t => 
-                `<span class="px-2.5 py-1 rounded bg-emerald-950/40 border border-emerald-500/20 text-emerald-400 font-bold text-[11px]">${t}</span>`
-            ).join(' ');
+        function openProjectModal(key) {
+            const data = projectSpecs[key];
+            if (!data) return;
 
-            const descBullets = project.desc.map(d => 
-                `<li class="flex items-start gap-2.5"><i class="fas fa-terminal text-emerald-500 mt-1 shrink-0 text-[10px]"></i> <span>${d}</span></li>`
-            ).join(' ');
+            modalTitle.innerText = data.title;
+            
+            const bullets = data.desc.map(d => `<li>${d}</li>`).join('');
+            const tags = data.tech.map(t => `<span class="modal-tech-tag">${t}</span>`).join('');
 
-            const bodyContent = `
-                <div class="space-y-4">
+            modalBody.innerHTML = `
+                <div class="modal-info-grid">
                     <div>
-                        <div class="text-xs text-emerald-500/60 uppercase font-bold tracking-widest">${project.subtitle}</div>
-                        <h2 class="text-xl font-bold text-emerald-400 mt-1">${project.title}</h2>
+                        <div class="modal-info-label">Category Subtitle</div>
+                        <div class="modal-info-value">${data.subtitle}</div>
                     </div>
-
-                    <div class="grid grid-cols-2 gap-4 p-3 bg-emerald-950/20 border border-emerald-500/15 rounded">
-                        <div>
-                            <span class="text-[10px] text-emerald-500/50 block font-bold uppercase">ROLE & RESPONSIBILITY:</span>
-                            <span class="text-emerald-300 font-bold">${project.role}</span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-emerald-500/50 block font-bold uppercase">DEPLOYMENT STATE:</span>
-                            <span class="text-emerald-400 font-bold"><i class="fas fa-circle-nodes animate-pulse text-[10px] mr-1"></i> ${project.status}</span>
-                        </div>
-                    </div>
-
                     <div>
-                        <span class="text-[10px] text-emerald-500/50 block font-bold uppercase mb-2">SYSTEM SPECS & CAPABILITIES:</span>
-                        <ul class="space-y-2 text-emerald-300 leading-relaxed text-xs">
-                            ${descBullets}
-                        </ul>
+                        <div class="modal-info-label">Deployment State</div>
+                        <div class="modal-info-value" style="color: var(--accent);"><i class="fas fa-circle-nodes"></i> ${data.status}</div>
                     </div>
-
-                    <div class="pt-2 border-t border-emerald-500/10">
-                        <span class="text-[10px] text-emerald-500/50 block font-bold uppercase mb-2">INTEGRATION TECH STACK:</span>
-                        <div class="flex flex-wrap gap-1.5">
-                            ${techBadges}
-                        </div>
+                    <div style="grid-column: span 2; margin-top: 8px;">
+                        <div class="modal-info-label">Role / Responsibility</div>
+                        <div class="modal-info-value">${data.role}</div>
                     </div>
+                </div>
+                
+                <h4>Capability Specifications</h4>
+                <ul class="modal-bullets">
+                    ${bullets}
+                </ul>
+                
+                <h4 style="margin-top: 24px;">Integration Technologies</h4>
+                <div class="modal-tech-tags">
+                    ${tags}
                 </div>
             `;
 
-            document.getElementById('modal-body-content').innerHTML = bodyContent;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Stop background scrolling
+        }
+
+        function closeProjectModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function closeProjectModalOnOverlay(event) {
+            if (event.target === modal) {
+                closeProjectModal();
+            }
+        }
+
+        // Handle Contact Form Submission
+        function handleContactSubmit(event) {
+            event.preventDefault();
+            const name = document.getElementById('form-name').value;
+            const email = document.getElementById('form-email').value;
+            const message = document.getElementById('form-message').value;
+
+            // Display success message
+            alert(`Thank you, ${name}! Your message has been sent successfully.\nConnection established with coordinates.`);
             
-            const modal = document.getElementById('project-spec-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.add('opacity-100');
-            }, 10);
+            // Reset form
+            document.getElementById('contact-form').reset();
         }
 
-        function closeProjectSpec() {
-            playSynthBeep(450, 0.08, 'sine');
-            const modal = document.getElementById('project-spec-modal');
-            modal.classList.remove('opacity-100');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-    </script>
+        // Gallery Filter Logic
+        function filterGallery(category, buttonEl) {
+            // Update active button state
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => btn.classList.remove('active'));
+            buttonEl.classList.add('active');
 
-    <!-- CORE INTERACTION: DUAL VIEW SWITCHER -->
-    <script>
-        function switchView(mode) {
-            playSynthBeep(500, 0.1, 'sine');
-            const guiView = document.getElementById('gui-viewport');
-            const termView = document.getElementById('terminal-viewport');
-            const guiBtn = document.getElementById('gui-mode-btn');
-            const termBtn = document.getElementById('terminal-mode-btn');
-
-            if (mode === 'gui') {
-                guiView.classList.remove('hidden');
-                termView.classList.add('hidden');
-
-                guiBtn.className = "px-3 py-1 bg-emerald-500 text-black font-bold transition-all flex items-center gap-1";
-                termBtn.className = "px-3 py-1 hover:bg-emerald-950/80 text-emerald-400 transition-all flex items-center gap-1";
-                showToast("Graphical dashboard node connected.", "success");
-            } else {
-                guiView.classList.add('hidden');
-                termView.classList.remove('hidden');
-
-                termBtn.className = "px-3 py-1 bg-emerald-500 text-black font-bold transition-all flex items-center gap-1";
-                guiBtn.className = "px-3 py-1 hover:bg-emerald-950/80 text-emerald-400 transition-all flex items-center gap-1";
-                showToast("Secure terminal shell sequence initiated.", "info");
-                setTimeout(() => document.getElementById('terminal-input-el').focus(), 100);
-            }
-        }
-    </script>
-
-    <!-- CORE INTERACTION: CORE THEME COLOUR SWITCHING SYSTEM -->
-    <script>
-        function changeTheme(themeName) {
-            playSynthBeep(850, 0.08, 'sawtooth');
-            const elements = {
-                text: document.querySelectorAll('.text-green-400, .text-cyan-400, .text-pink-400'),
-                border: document.querySelectorAll('.border-emerald-500\\/20, .border-cyan-500\\/20, .border-pink-500\\/20')
-            };
-
-            let themeColor = '#10b981'; // Default
-            let themeClass = 'green';
-            const photoTint = document.getElementById('photo-overlay-tint');
-
-            if (themeName === 'cyan') {
-                themeColor = '#06b6d4';
-                themeClass = 'cyan';
-                document.documentElement.className = "h-full bg-black select-none text-cyan-400 font-mono";
-                updateGlowTheme('blue');
-                if(photoTint) {
-                    photoTint.className = "absolute inset-0 bg-cyan-500/15 group-hover:bg-transparent transition-all pointer-events-none mix-blend-color";
+            // Filter items
+            const galleryItems = document.querySelectorAll('.gallery-item');
+            galleryItems.forEach(item => {
+                if (category === 'all' || item.getAttribute('data-category') === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
                 }
-            } else if (themeName === 'pink') {
-                themeColor = '#ec4899';
-                themeClass = 'pink';
-                document.documentElement.className = "h-full bg-black select-none text-pink-400 font-mono";
-                updateGlowTheme('pink');
-                if(photoTint) {
-                    photoTint.className = "absolute inset-0 bg-pink-500/15 group-hover:bg-transparent transition-all pointer-events-none mix-blend-color";
-                }
-            } else {
-                themeColor = '#10b981';
-                themeClass = 'green';
-                document.documentElement.className = "h-full bg-black select-none text-green-400 font-mono";
-                updateGlowTheme('green');
-                if(photoTint) {
-                    photoTint.className = "absolute inset-0 bg-emerald-500/10 group-hover:bg-transparent transition-all pointer-events-none mix-blend-color";
-                }
-            }
-
-            activeColor = themeColor;
-            showToast(`Synchronizing UI state to protocol_${themeName.toUpperCase()}`, "info");
-        }
-
-        function updateGlowTheme(colorType) {
-            const glowText = document.querySelectorAll('.terminal-glow-green, .terminal-glow-blue, .terminal-glow-pink');
-            glowText.forEach(el => {
-                el.classList.remove('terminal-glow-green', 'terminal-glow-blue', 'terminal-glow-pink');
-                el.classList.add(`terminal-glow-${colorType}`);
             });
         }
-    </script>
 
-    <!-- INTERACTIVE TERMINAL SHELL PROCESSOR -->
-    <script>
-        const terminalOutput = document.getElementById('terminal-output');
-        const terminalInput = document.getElementById('terminal-input-el');
+        // Interactive Blogs Mockup Helper Alert
+        function showBlogAlert(title, content) {
+            alert(`[BLOG TRANSCRIPTION: ${title.toUpperCase()}]\n\n${content}`);
+        }
 
-        terminalInput.addEventListener('keydown', function(e) {
-            playTypewriterSound();
-            if (e.key === 'Enter') {
-                const command = this.value.trim();
-                this.value = '';
-                if (command) {
-                    processCommand(command);
+        // IntersectionObserver for scroll-reveal animations
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
                 }
-            }
+            });
+        }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => {
+            revealObserver.observe(el);
         });
-
-        function scrollTerminalToBottom() {
-            terminalOutput.scrollTop = terminalOutput.scrollHeight;
-        }
-
-        function printToTerminal(text, delay = 0, isHtml = false) {
-            const outputLine = document.createElement('div');
-            outputLine.className = "leading-relaxed mb-1";
-            if (isHtml) {
-                outputLine.innerHTML = text;
-            } else {
-                outputLine.textContent = text;
-            }
-            terminalOutput.appendChild(outputLine);
-            scrollTerminalToBottom();
-        }
-
-        function executeTermCommand(cmd) {
-            switchView('terminal');
-            terminalInput.value = cmd;
-            processCommand(cmd);
-            terminalInput.value = '';
-        }
-
-        function processCommand(cmdLine) {
-            const parts = cmdLine.toLowerCase().trim().split(' ');
-            const cmd = parts[0];
-            const arg = parts.slice(1).join(' ');
-
-            printToTerminal(`kaushal@eetirp:~# ${cmdLine}`);
-
-            switch(cmd) {
-                case 'help':
-                    printToTerminal(`--- AVAILABLE SECURE COMMAND MODULES ---`);
-                    printToTerminal(`about         - Display identity packet for Kaushal Kumar Baitha.`);
-                    printToTerminal(`skills        - Decrypt known technology systems stack.`);
-                    printToTerminal(`projects      - List integrated project files inside partition.`);
-                    printToTerminal(`run [name]    - Run analysis of specific project file (e.g. run kaura).`);
-                    printToTerminal(`socials       - Reveal active communication arrays.`);
-                    printToTerminal(`hack          - Manually run emergency bypass protocols.`);
-                    printToTerminal(`gui           - Shift viewport back to standard Graphical dashboard.`);
-                    printToTerminal(`clear         - Wipe standard monitor feedback logs.`);
-                    break;
-                
-                case 'clear':
-                    terminalOutput.innerHTML = '';
-                    break;
-
-                case 'about':
-                    printToTerminal(`[SYSTEM DISCLOSURE: EETIRP FOUNDER STATE]`);
-                    printToTerminal(`Name: Kaushal Kumar Baitha`);
-                    printToTerminal(`Title: Founder & Full Stack Architect @ EETIRP LTD`);
-                    printToTerminal(`Education: Sapthagiri NPS University (August 2025 - Pursuing)`);
-                    printToTerminal(`Credential Code: "5_6111493846640632602.pdf" verified.`);
-                    printToTerminal(`Location Coordinates: Chikkabanavara, Bengaluru - 560090`);
-                    printToTerminal(`Profile Summary: Leading development cycles for high-impact educational frameworks, AI platforms, and microservice pipelines under the EETIRP LTD banner.`);
-                    break;
-
-                case 'skills':
-                    printToTerminal(`--- ACQUIRED SKILLSETS GRAPH MATRIX ---`);
-                    printToTerminal(`Languages: Java, C, JavaScript/ES6, MongoDB`);
-                    printToTerminal(`Development Stack: React.js, Express.js, Node.js, HTML5, CSS3, Bootstrap`);
-                    printToTerminal(`Methodologies: DSA optimization, PWA Service Workers, Cloud Integration`);
-                    printToTerminal(`IDEs & Workstations: VS Code, Git CLI, PyCharm, IntelliJ, Eclipse`);
-                    break;
-
-                case 'projects':
-                    printToTerminal(`--- INDEXING SECURE ARCHIVES IN EETIRP PARTITION ---`);
-                    printToTerminal(`1. verthink   - VerThink Learning Platform (PWA / Firebase Service)`);
-                    printToTerminal(`2. kaura      - KAURA Digital Student Ecosystem (Unified Framework)`);
-                    printToTerminal(`3. placement  - Placement AI Platform (MERN Stack Platform)`);
-                    printToTerminal(`4. gyanguru   - GyanGuru Admission System (Restful DB / Express Engine)`);
-                    printToTerminal(`Use command 'run [project_key]' to initiate deep analysis protocol.`);
-                    break;
-
-                case 'run':
-                    if (!arg) {
-                        printToTerminal(`ERROR: Specify target node identifier (e.g., 'run kaura')`, false);
-                    } else if (projectData[arg]) {
-                        printToTerminal(`BOOTING DIRECT INTERFACE DECRYPTOR FOR [${arg.toUpperCase()}]...`);
-                        setTimeout(() => {
-                            expandProject(arg);
-                            printToTerminal(`DECRYPTION COMPLETED: Visual report displayed on main screen.`);
-                        }, 500);
-                    } else {
-                        printToTerminal(`NODE TARGET NOT FOUND: Attempt 'projects' to fetch list of nodes.`);
-                    }
-                    break;
-
-                case 'socials':
-                    printToTerminal(`--- DECRYPTING COMMS ARRAYS ---`);
-                    printToTerminal(`Email: kaushalbaitha74@gmail.com`, false);
-                    printToTerminal(`Mobile Beacon: +91 8088487801`, false);
-                    printToTerminal(`LinkedIn Node: https://www.linkedin.com/in/kaushal-kumar-baitha-3b4b41369/`, false);
-                    printToTerminal(`GitHub Hub: https://github.com/kaushalbaitha7`, false);
-                    break;
-
-                case 'hack':
-                    printToTerminal(`CRITICAL ALERT: FORCING CODES ACCESS SEQUENCE!`);
-                    triggerHackSimulation();
-                    break;
-
-                case 'gui':
-                    switchView('gui');
-                    break;
-
-                default:
-                    printToTerminal(`COMMAND NOT RECOGNIZED: '${cmd}'. Try entering 'help' to review instructions.`);
-            }
-            scrollTerminalToBottom();
-        }
-    </script>
-
-    <!-- HACKING SYSTEM BYPASS SIMULATOR GRID LOGIC -->
-    <script>
-        let currentLevel = 1;
-        let hackTries = 8;
-        let hackTargetPattern = [];
-        let playerInputPattern = [];
-        const puzzleGrid = document.getElementById('hacking-puzzle-grid');
-        const triesText = document.getElementById('hack-tries-count');
-
-        const hackerColors = [
-            'bg-emerald-500', 
-            'bg-cyan-500', 
-            'bg-pink-500', 
-            'bg-yellow-500'
-        ];
-
-        function initializeHackPuzzle() {
-            hackTries = 8;
-            triesText.innerText = hackTries;
-            puzzleGrid.innerHTML = '';
-            hackTargetPattern = [];
-            playerInputPattern = [];
-
-            for (let i = 0; i < 16; i++) {
-                const randomColorIndex = Math.floor(Math.random() * hackerColors.length);
-                const color = hackerColors[randomColorIndex];
-                
-                const gridButton = document.createElement('button');
-                gridButton.className = `w-full aspect-square border border-emerald-500/20 bg-emerald-950/10 hover:border-emerald-400 rounded transition-all flex items-center justify-center font-bold text-[10px] text-transparent hover:text-white`;
-                gridButton.innerText = i + 1;
-                gridButton.dataset.index = i;
-                gridButton.dataset.color = color;
-
-                gridButton.onclick = function() {
-                    handleGridClick(this);
-                };
-
-                puzzleGrid.appendChild(gridButton);
-            }
-
-            for (let t = 0; t < 3; t++) {
-                hackTargetPattern.push(Math.floor(Math.random() * 16));
-            }
-            
-            showToast("Bypass interface calibrated. Port scanner active.", "info");
-        }
-
-        function handleGridClick(btn) {
-            if (hackTries <= 0) {
-                showToast("System fully locked down! Regenerate interceptor.", "danger");
-                return;
-            }
-
-            const index = parseInt(btn.dataset.index);
-            const color = btn.dataset.color;
-
-            playSynthBeep(300 + (index * 40), 0.15, 'triangle');
-
-            btn.classList.add(color);
-            btn.classList.remove('text-transparent');
-            btn.classList.add('text-black');
-
-            setTimeout(() => {
-                btn.classList.remove(color);
-                btn.classList.add('text-transparent');
-                btn.classList.remove('text-black');
-            }, 800);
-
-            playerInputPattern.push(index);
-
-            if (playerInputPattern.length === 2) {
-                const firstIndex = playerInputPattern[0];
-                const secondIndex = playerInputPattern[1];
-                const firstBtn = puzzleGrid.children[firstIndex];
-                const secondBtn = puzzleGrid.children[secondIndex];
-
-                if (firstBtn.dataset.color === secondBtn.dataset.color && firstIndex !== secondIndex) {
-                    showToast("Interface ports matched!", "success");
-                    firstBtn.classList.add('bg-emerald-500', 'text-black');
-                    firstBtn.classList.remove('text-transparent', 'border-emerald-500/20');
-                    secondBtn.classList.add('bg-emerald-500', 'text-black');
-                    secondBtn.classList.remove('text-transparent', 'border-emerald-500/20');
-                    
-                    playSynthBeep(800, 0.2, 'sine');
-                    setTimeout(() => playSynthBeep(1200, 0.2, 'sine'), 100);
-                } else {
-                    hackTries--;
-                    triesText.innerText = hackTries;
-                    showToast("Sequence mismatch. Watch voltage spike!", "warning");
-                    
-                    if (hackTries <= 0) {
-                        triggerCustomAlert("FIREWALL LOCKOUT UNLEASHED", "Emergency defensive nodes deployed! The grid security key has self-destructed. Regenerate key to try again.");
-                    }
-                }
-                playerInputPattern = [];
-            }
-        }
-
-        function triggerHackSimulation() {
-            switchView('terminal');
-            printToTerminal(`===============================================`);
-            printToTerminal(`   [ALERT] STARTING EMERGENCY OVERRIDE MATRIX  `);
-            printToTerminal(`===============================================`);
-            printToTerminal(`Decrypting routing ports to locate terminal secrets...`);
-            
-            let count = 0;
-            const progressInterval = setInterval(() => {
-                count += 10;
-                printToTerminal(`DECRYPTING COMM PORTS ... ${count}%`);
-                playSynthBeep(200 + count, 0.05, 'sawtooth', 0.05);
-
-                if (count >= 100) {
-                    clearInterval(progressInterval);
-                    printToTerminal(`DECRYPTION COMPLETED!`);
-                    printToTerminal(`Credentials bypassed! Secret database open.`);
-                    printToTerminal(`EETIRP LTD: TECHNOLOGY, INNOVATION, AI, AND STUDENT ECOSYSTEMS.`);
-                    printToTerminal(`KAUSHAL SPECIAL SKILLS: Java, C, React.js, Node.js & MongoDB.`);
-                    showToast("Emergency Bypass Successful!", "success");
-                }
-            }, 150);
-        }
-    </script>
-
-    <!-- LIVE TELEMETRY LOGS & AMBIENT SIGNAL FEED -->
-    <script>
-        function updateSignalBars() {
-            const container = document.getElementById('signal-bars');
-            if (container) {
-                container.innerHTML = '';
-                for (let i = 0; i < 24; i++) {
-                    const heightVal = Math.floor(Math.random() * 95) + 5;
-                    const bar = document.createElement('div');
-                    bar.className = "flex-1 bg-emerald-500/40 rounded-t transition-all duration-300";
-                    bar.style.height = `${heightVal}%`;
-                    container.appendChild(bar);
-                }
-            }
-        }
-
-        setInterval(updateSignalBars, 1500);
-
-        window.onload = function() {
-            updateSignalBars();
-            initializeHackPuzzle();
-            startBootSequence();
-        }
     </script>
 </body>
 </html>
