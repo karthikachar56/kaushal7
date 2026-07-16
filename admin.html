@@ -394,8 +394,12 @@
         </div>
     </div>
 
-    <!-- INTERACTION LOGIC -->
+    <!-- CORE INTERACTION LOGIC -->
     <script>
+        // Configure API Base URL. Leave empty if deploying together (relative paths).
+        // If deploying separately, configure your backend domain here (e.g., 'https://kaushal-api.onrender.com')
+        const API_BASE = '';
+
         // Check for existing validation state on load
         window.addEventListener('DOMContentLoaded', () => {
             checkAuthToken();
@@ -410,7 +414,7 @@
             }
 
             try {
-                const res = await fetch('/api/validate-token', {
+                const res = await fetch(API_BASE + '/api/validate-token', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -436,6 +440,7 @@
             document.body.style.alignItems = 'center';
         }
 
+        // View dashboard helper
         function showDashboard() {
             document.getElementById('login-panel').style.display = 'none';
             document.getElementById('dashboard-panel').style.display = 'flex';
@@ -451,7 +456,7 @@
             errorDiv.style.display = 'none';
 
             try {
-                const res = await fetch('/api/login', {
+                const res = await fetch(API_BASE + '/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
@@ -476,7 +481,7 @@
         async function handleLogout() {
             const token = localStorage.getItem('admin_token');
             if (token) {
-                await fetch('/api/logout', {
+                await fetch(API_BASE + '/api/logout', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -491,7 +496,7 @@
             catalogList.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">Fetching logs...</div>';
 
             try {
-                const res = await fetch('/api/blogs');
+                const res = await fetch(API_BASE + '/api/blogs');
                 const blogs = await res.json();
                 
                 if (blogs.length === 0) {
@@ -537,7 +542,7 @@
             publishBtn.innerText = 'Publishing...';
 
             try {
-                const res = await fetch('/api/blogs', {
+                const res = await fetch(API_BASE + '/api/blogs', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -585,7 +590,7 @@
             formData.append('image', file);
 
             try {
-                const res = await fetch('/api/upload', {
+                const res = await fetch(API_BASE + '/api/upload', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -597,8 +602,10 @@
                 if (data.success) {
                     statusDiv.innerText = 'Upload successful!';
                     statusDiv.style.color = '#047857';
-                    urlInput.value = data.url;
-                    previewImg.src = data.url;
+                    // Store full URL containing API base
+                    const fullUrl = API_BASE ? (API_BASE + data.url) : data.url;
+                    urlInput.value = fullUrl;
+                    previewImg.src = fullUrl;
                     previewContainer.style.display = 'block';
                 } else {
                     statusDiv.innerText = 'Upload failed: ' + data.error;
@@ -631,7 +638,7 @@
             const token = localStorage.getItem('admin_token');
 
             try {
-                const res = await fetch(`/api/blogs/${id}`, {
+                const res = await fetch(API_BASE + `/api/blogs/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`

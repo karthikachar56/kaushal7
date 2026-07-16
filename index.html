@@ -937,6 +937,10 @@
             revealObserver.observe(el);
         });
 
+        // Configure API Base URL. Leave empty if deploying together (relative paths).
+        // If deploying separately, configure your backend domain here (e.g., 'https://kaushal-api.onrender.com')
+        const API_BASE = '';
+
         // Initialize blog list fetching
         loadDynamicBlogs();
 
@@ -945,7 +949,7 @@
             if (!blogGrid) return;
             
             try {
-                const res = await fetch('/api/blogs');
+                const res = await fetch(API_BASE + '/api/blogs');
                 const blogs = await res.json();
                 
                 if (blogs.length === 0) {
