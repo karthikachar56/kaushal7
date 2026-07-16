@@ -970,10 +970,14 @@
                     const escapedTitle = blog.title.replace(/'/g, "\\'");
                     const escapedContent = blog.content.replace(/'/g, "\\'").replace(/\n/g, "\\n");
                     
+                    const hasCover = blog.imageUrl && blog.imageUrl.trim() !== '';
+                    const coverStyle = hasCover ? `style="background-image: url('${blog.imageUrl}'); background-size: cover; background-position: center;"` : '';
+                    const innerImageContent = hasCover ? '' : `<i class="${iconClass}"></i>`;
+                    
                     return `
                         <article class="blog-card reveal-scale ${delayClass}">
-                            <div class="blog-card-image">
-                                <i class="${iconClass}"></i>
+                            <div class="blog-card-image" ${coverStyle}>
+                                ${innerImageContent}
                             </div>
                             <div class="blog-card-content">
                                 <div class="blog-meta">

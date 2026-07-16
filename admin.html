@@ -358,6 +358,19 @@
                     </div>
                     
                     <div class="form-group">
+                        <label>Cover Photo (Optional)</label>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <input type="file" id="post-image" class="form-control" accept="image/*" onchange="uploadCoverImage(this)" style="flex-grow: 1;">
+                            <input type="hidden" id="post-image-url">
+                        </div>
+                        <div id="image-upload-status" style="font-size: 0.8rem; margin-top: 6px; color: var(--text-secondary); display: none;"></div>
+                        <div id="image-preview-container" style="margin-top: 12px; display: none; width: 80px; height: 80px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); overflow: hidden; position: relative;">
+                            <img id="image-preview" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                            <button type="button" onclick="clearUploadedImage()" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 0.6rem; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
                         <label for="post-content">Full Body Content (Alert Popup Detail)</label>
                         <textarea id="post-content" class="form-control" rows="6" placeholder="Write full transcription content here..." required></textarea>
                     </div>
@@ -506,6 +519,7 @@
             const category = document.getElementById('post-category').value;
             const excerpt = document.getElementById('post-excerpt').value;
             const content = document.getElementById('post-content').value;
+            const imageUrl = document.getElementById('post-image-url').value;
             
             const successDiv = document.getElementById('compose-success');
             const errorDiv = document.getElementById('compose-error');
@@ -524,7 +538,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ title, category, excerpt, content })
+                    body: JSON.stringify({ title, category, excerpt, content, imageUrl })
                 });
 
                 const data = await res.json();
@@ -532,6 +546,7 @@
                     successDiv.innerText = 'Article successfully indexed & published!';
                     successDiv.style.display = 'block';
                     document.getElementById('blog-form').reset();
+                    clearUploadedImage();
                     loadCatalog();
                 } else {
                     errorDiv.innerText = data.error || 'Failed to submit article.';
@@ -544,6 +559,65 @@
                 publishBtn.disabled = false;
                 publishBtn.innerText = 'Publish Article';
             }
+        }
+
+        // Upload Cover Image handler
+        async function uploadCoverImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const statusDiv = document.getElementById('image-upload-status');
+            const previewContainer = document.getElementById('image-preview-container');
+            const previewImg = document.getElementById('image-preview');
+            const urlInput = document.getElementById('post-image-url');
+
+            statusDiv.style.display = 'block';
+            statusDiv.innerText = 'Uploading photo...';
+            statusDiv.style.color = 'var(--text-secondary)';
+            
+            const token = localStorage.getItem('admin_token');
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    statusDiv.innerText = 'Upload successful!';
+                    statusDiv.style.color = '#047857';
+                    urlInput.value = data.url;
+                    previewImg.src = data.url;
+                    previewContainer.style.display = 'block';
+                } else {
+                    statusDiv.innerText = 'Upload failed: ' + data.error;
+                    statusDiv.style.color = '#b91c1c';
+                    urlInput.value = '';
+                    previewContainer.style.display = 'none';
+                }
+            } catch (err) {
+                statusDiv.innerText = 'Network transmission error.';
+                statusDiv.style.color = '#b91c1c';
+                urlInput.value = '';
+                previewContainer.style.display = 'none';
+            }
+        }
+
+        // Clear Uploaded image helper
+        function clearUploadedImage() {
+            document.getElementById('post-image').value = '';
+            document.getElementById('post-image-url').value = '';
+            document.getElementById('image-preview-container').style.display = 'none';
+            document.getElementById('image-preview').src = '';
+            const statusDiv = document.getElementById('image-upload-status');
+            statusDiv.style.display = 'none';
+            statusDiv.innerText = '';
         }
 
         // Delete Blog Post Handler

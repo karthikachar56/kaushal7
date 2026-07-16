@@ -3,6 +3,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
+const multer = require('multer');
 
 // Load environment variables if .env file exists
 require('dotenv').config();
@@ -16,6 +17,15 @@ app.use(express.json());
 
 // Serve static assets from root
 app.use(express.static(__dirname));
+
+// Serve uploads statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Ensure uploads folder exists on startup
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+}
 
 // Admin Credentials
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
@@ -42,13 +52,14 @@ if (MONGODB_URI) {
         console.log('Successfully connected to MongoDB Atlas.');
         isMongoConnected = true;
         
-        // Define Blog Mongoose Schema
+        // Define Blog Mongoose Schema with imageUrl
         const blogSchema = new mongoose.Schema({
             title: { type: String, required: true },
             category: { type: String, required: true },
             date: { type: String, required: true },
             excerpt: { type: String, required: true },
-            content: { type: String, required: true }
+            content: { type: String, required: true },
+            imageUrl: { type: String, default: '' }
         }, { timestamps: true });
         
         // Convert virtual id
@@ -84,7 +95,8 @@ async function seedMongoDB() {
                     category: item.category,
                     date: item.date,
                     excerpt: item.excerpt,
-                    content: item.content
+                    content: item.content,
+                    imageUrl: item.imageUrl || ''
                 }));
                 await BlogModel.insertMany(formatted);
                 console.log('MongoDB successfully seeded with initial posts.');
@@ -121,6 +133,34 @@ function writeLocalBlogs(blogs) {
         return false;
     }
 }
+
+// -------------------------------------------------------------
+// FILE UPLOAD CONFIGURATION (Multer)
+// -------------------------------------------------------------
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // Limit 5MB
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpeg|jpg|png|gif|webp/;
+        const mimetype = filetypes.test(file.mimetype);
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+        
+        if (mimetype && extname) {
+            return cb(null, true);
+        }
+        cb(new Error('Only image files (jpg, jpeg, png, gif, webp) are allowed!'));
+    }
+});
 
 // -------------------------------------------------------------
 // AUTH MIDDLEWARE
@@ -181,7 +221,6 @@ app.get('/api/blogs', async (req, res) => {
             return res.json(dbBlogs);
         } else {
             const localBlogs = readLocalBlogs();
-            // Return reverse order to show newest posts first
             return res.json([...localBlogs].reverse());
         }
     } catch (err) {
@@ -190,10 +229,10 @@ app.get('/api/blogs', async (req, res) => {
     }
 });
 
-// Add a new blog
+// Add a new blog with optional imageUrl
 app.post('/api/blogs', authenticateAdmin, async (req, res) => {
     try {
-        const { title, category, excerpt, content } = req.body;
+        const { title, category, excerpt, content, imageUrl } = req.body;
         if (!title || !category || !excerpt || !content) {
             return res.status(400).json({ success: false, error: 'All fields (title, category, excerpt, content) are required.' });
         }
@@ -207,7 +246,8 @@ app.post('/api/blogs', authenticateAdmin, async (req, res) => {
                 category,
                 date: currentDate,
                 excerpt,
-                content
+                content,
+                imageUrl: imageUrl || ''
             });
             await newBlog.save();
             return res.status(201).json({ success: true, blog: newBlog });
@@ -220,7 +260,8 @@ app.post('/api/blogs', authenticateAdmin, async (req, res) => {
                 category,
                 date: currentDate,
                 excerpt,
-                content
+                content,
+                imageUrl: imageUrl || ''
             };
             blogs.push(newBlog);
             writeLocalBlogs(blogs);
@@ -230,6 +271,20 @@ app.post('/api/blogs', authenticateAdmin, async (req, res) => {
         console.error('Error creating blog:', err);
         res.status(500).json({ success: false, error: 'Failed to create blog post' });
     }
+});
+
+// Image Upload Endpoint (secured)
+app.post('/api/upload', authenticateAdmin, (req, res) => {
+    upload.single('image')(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({ success: false, error: err.message });
+        }
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'No file selected' });
+        }
+        const fileUrl = `/uploads/${req.file.filename}`;
+        return res.json({ success: true, url: fileUrl });
+    });
 });
 
 // Delete a blog
